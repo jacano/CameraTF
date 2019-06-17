@@ -6,6 +6,7 @@ using Android.Runtime;
 using Android.Support.V4.App;
 using Sample.Android;
 using ZXing.Net.Mobile.Android;
+using TailwindTraders.Mobile.Features.Scanning;
 
 namespace ZXing.Mobile
 {
@@ -14,32 +15,52 @@ namespace ZXing.Mobile
     {
         public static readonly string[] RequiredPermissions = new[] {
             Android.Manifest.Permission.Camera,
-            Android.Manifest.Permission.Flashlight
+            Android.Manifest.Permission.Flashlight,
+            Android.Manifest.Permission.WriteExternalStorage
         };
 
         ZXingScannerFragment scannerFragment;
 
+        public static TensorflowLiteService tfService;
+
         protected override void OnCreate (Bundle bundle)
         {
-            base.OnCreate (bundle);
+            base.OnCreate(bundle);
 
-            this.RequestWindowFeature (WindowFeatures.NoTitle);
+            this.RequestWindowFeature(WindowFeatures.NoTitle);
 
-            this.Window.AddFlags (WindowManagerFlags.Fullscreen); //to show
-            this.Window.AddFlags (WindowManagerFlags.KeepScreenOn); //Don't go to sleep while scanning
+            this.Window.AddFlags(WindowManagerFlags.Fullscreen); //to show
+            this.Window.AddFlags(WindowManagerFlags.KeepScreenOn); //Don't go to sleep while scanning
 
             //if (ScanningOptions.AutoRotate.HasValue && !ScanningOptions.AutoRotate.Value)
             //    RequestedOrientation = ScreenOrientation.Nosensor;
 
             //TODO
 
-            SetContentView (Resource.Layout.zxingscanneractivitylayout);
+            SetContentView(Resource.Layout.zxingscanneractivitylayout);
 
-            scannerFragment = new ZXingScannerFragment ();
+            var model = "hardhat_detect.tflite";
+            var labels = "hardhat_labels_list.txt";
 
-            SupportFragmentManager.BeginTransaction ()
-				.Replace (Resource.Id.contentFrame, scannerFragment, "ZXINGFRAGMENT")
-				.Commit ();
+            using (var modelData = Assets.Open(model))
+            {
+                using (var labelData = Assets.Open(labels))
+                {
+                    tfService = new TensorflowLiteService();
+                    tfService.Initialize(modelData, labelData);
+                }
+            }
+
+            scannerFragment = new ZXingScannerFragment();
+
+            SupportFragmentManager.BeginTransaction()
+                .Replace(Resource.Id.contentFrame, scannerFragment, "ZXINGFRAGMENT")
+                .Commit();
+        }
+
+        private void CopyFile(string fileName, string path)
+        {
+            
         }
 
         protected override void OnResume ()

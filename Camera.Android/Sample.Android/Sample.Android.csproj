@@ -49,12 +49,15 @@
     <Reference Include="Mono.Android.Export" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AR\TensorflowLiteService.cs" />
     <Compile Include="CameraAccess\CameraAnalyzer.cs" />
     <Compile Include="CameraAccess\CameraController.cs" />
     <Compile Include="CameraAccess\CameraEventsListener.cs" />
     <Compile Include="CameraAccess\Torch.cs" />
     <Compile Include="CameraResolution.cs" />
-    <Compile Include="FastJavaArrayEx.cs" />
+    <Compile Include="Helpers\FastJavaArrayEx.cs" />
+    <Compile Include="Helpers\ColorUnion.cs" />
+    <Compile Include="Helpers\MathHelper.cs" />
     <Compile Include="IScannerView.cs" />
     <Compile Include="MobileBarcodeScanner.cs" />
     <Compile Include="Performance.cs" />
@@ -67,8 +70,15 @@
     <Compile Include="ZXingSurfaceView.cs" />
   </ItemGroup>
   <ItemGroup>
+    <AndroidNativeLibrary Include="Libs\EmguTF\arm64-v8a\libtfliteextern.so" />
+    <AndroidNativeLibrary Include="Libs\EmguTF\armeabi-v7a\libtfliteextern.so" />
+    <AndroidAsset Include="..\Resources\hardhat\hardhat_detect.tflite">
+      <Link>Assets\hardhat_detect.tflite</Link>
+    </AndroidAsset>
+    <None Include="Libs\EmguTF\build_tf_lite_android.sh" />
+    <AndroidNativeLibrary Include="Libs\EmguTF\x86\libtfliteextern.so" />
+    <AndroidNativeLibrary Include="Libs\EmguTF\x86_64\libtfliteextern.so" />
     <None Include="Resources\AboutResources.txt" />
-    <None Include="Assets\AboutAssets.txt" />
     <None Include="Properties\AndroidManifest.xml" />
   </ItemGroup>
   <ItemGroup>
@@ -93,5 +103,18 @@
       <Generator>MSBuild:UpdateGeneratedFiles</Generator>
       <SubType>Designer</SubType>
     </AndroidResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Emgu.TF.Lite\Emgu.TF.Lite.csproj">
+      <Project>{d7707a6b-d4db-4979-b04c-aa1c179cebe9}</Project>
+      <Name>Emgu.TF.Lite</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidAsset Include="..\Resources\hardhat\hardhat_labels_list.txt">
+      <Link>Assets\hardhat_labels_list.txt</Link>
+    </AndroidAsset>
+    <Content Include="Libs\EmguTF\.gitignore" />
+    <Content Include="Libs\EmguTF\readme.txt" />
   </ItemGroup>
 </Project>
