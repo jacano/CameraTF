@@ -62,7 +62,6 @@
     <Compile Include="PermissionsHandler.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="MainActivity.cs" />
     <Compile Include="ZxingActivity.cs" />
     <Compile Include="ZXingScannerFragment.cs" />
     <Compile Include="ZXingSurfaceView.cs" />
