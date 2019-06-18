@@ -147,17 +147,7 @@ namespace TailwindTraders.Mobile.Features.Scanning
                         var xmax = detection_boxes_out[2];
                         var ymax = detection_boxes_out[3];
 
-
-                        // TODO
-                        //MessagingCenter.Instance.Send(this, nameof(ObjectDetectedMessage), new DetectionMessage
-                        //{
-                        //    Xmin = xmin,
-                        //    Ymin = ymin,
-                        //    Xmax = xmax,
-                        //    Ymax = ymax,
-                        //    Score = score,
-                        //    Label = label,
-                        //});
+                        Console.WriteLine($"label: {label} score: {score}");
                     }
                 }
             }

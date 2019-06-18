@@ -161,19 +161,7 @@ namespace ZXing.Mobile.CameraAccess
             PerformanceCounter.Stop(start, "{0} ms");
         }
 
-        private void SaveSkiaImg(SKBitmap img)
-        {
-            var path = Android.OS.Environment.ExternalStorageDirectory.AbsolutePath;
-            var filePath = System.IO.Path.Combine(path, "test-skia.png");
-
-            using (var stream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
-            {
-                var d = SKImage.FromBitmap(img).Encode(SKEncodedImageFormat.Png, 100);
-                d.SaveTo(stream);
-            }
-        }
-
-        void RotateBitmap(SKBitmap bitmap, int degrees)
+        private void RotateBitmap(SKBitmap bitmap, int degrees)
         {
             using (var surface = new SKCanvas(skiaRotatedRGB))
             {
@@ -181,6 +169,18 @@ namespace ZXing.Mobile.CameraAccess
                 surface.RotateDegrees(degrees);
                 surface.Translate(-skiaRotatedRGB.Width / 2, -skiaRotatedRGB.Height / 2);
                 surface.DrawBitmap(bitmap, 0, 0);
+            }
+        }
+
+        private void SaveSkiaImg(SKBitmap img)
+        {
+            var path = Android.OS.Environment.ExternalStorageDirectory.AbsolutePath;
+            var filePath = Path.Combine(path, "test-skia.png");
+
+            using (var stream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
+            {
+                var d = SKImage.FromBitmap(img).Encode(SKEncodedImageFormat.Png, 100);
+                d.SaveTo(stream);
             }
         }
     }
