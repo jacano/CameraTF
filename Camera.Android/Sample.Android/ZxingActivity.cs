@@ -47,7 +47,7 @@ namespace ZXing.Mobile
                 using (var labelData = Assets.Open(labels))
                 {
                     tfService = new TensorflowLiteService();
-                    tfService.Initialize(modelData, labelData);
+                    tfService.Initialize(modelData, labelData, useNumThreads: true);
                 }
             }
 

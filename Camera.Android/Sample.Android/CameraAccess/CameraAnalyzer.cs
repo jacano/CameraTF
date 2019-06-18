@@ -6,6 +6,7 @@ using Android.Views;
 using ApxLabs.FastAndroidCamera;
 using Sample.Android.Helpers;
 using SkiaSharp;
+using TailwindTraders.Mobile.Features.Scanning;
 using ZXing.Net.Mobile.Android;
 
 namespace ZXing.Mobile.CameraAccess
@@ -17,7 +18,7 @@ namespace ZXing.Mobile.CameraAccess
         private Task _processingTask;
         private DateTime _lastPreviewAnalysis = DateTime.UtcNow;
 
-        private int[] rgb;
+        private int[] rgba;
         private IntPtr output;
         private SKBitmap skiaRGB;
         private SKBitmap skiaScaledRGB;
@@ -26,6 +27,7 @@ namespace ZXing.Mobile.CameraAccess
         private int width;
         private int height;
         private int cDegrees;
+        private int rgbaCount;
 
         public CameraAnalyzer(SurfaceView surfaceView)
         {
@@ -116,7 +118,7 @@ namespace ZXing.Mobile.CameraAccess
 
         private unsafe void DecodeFrame(FastJavaByteArray fastArray)
         {
-            if (rgb == null)
+            if (rgba == null)
             {
                 var cameraParameters = _cameraController.Camera.GetParameters();
                 width = cameraParameters.PreviewSize.Width;
@@ -124,20 +126,23 @@ namespace ZXing.Mobile.CameraAccess
 
                 cDegrees = _cameraController.LastCameraDisplayOrientationDegree;
 
-                rgb = new int[width * height];
+                rgbaCount = width * height;
+                rgba = new int[rgbaCount];
 
-                var rgbGCHandle = GCHandle.Alloc(rgb, GCHandleType.Pinned);
+                var rgbGCHandle = GCHandle.Alloc(rgba, GCHandleType.Pinned);
                 output = rgbGCHandle.AddrOfPinnedObject();
 
+                var outputInfo = new SKImageInfo(TensorflowLiteService.ModelInputSize, TensorflowLiteService.ModelInputSize, SKColorType.Rgba8888);
+
                 skiaRGB = new SKBitmap(new SKImageInfo(width, height, SkiaSharp.SKColorType.Rgba8888));
-                skiaScaledRGB = new SKBitmap(new SKImageInfo(300, 300, SkiaSharp.SKColorType.Rgba8888));
-                skiaRotatedRGB = new SKBitmap(new SKImageInfo(300, 300, SkiaSharp.SKColorType.Rgba8888));
+                skiaScaledRGB = new SKBitmap(outputInfo);
+                skiaRotatedRGB = new SKBitmap(outputInfo);
             }
 
             var start = PerformanceCounter.Start();
 
             var pY = fastArray.Raw;
-            var pUV = pY + width * height;
+            var pUV = pY + rgbaCount;
             
             YuvHelper.ConvertYUV420SPToARGB8888(pY, pUV, (int*)output, width, height);
 
@@ -147,7 +152,9 @@ namespace ZXing.Mobile.CameraAccess
 
             RotateBitmap(skiaScaledRGB, cDegrees);
 
-            //SaveSkiaImg(skiaRotatedRGB);
+            var colors = skiaRotatedRGB.GetPixels();
+
+            ZxingActivity.tfService.Recognize((int*)colors, rgbaCount);
 
             PerformanceCounter.Stop(start,
                 "Decode Time: {0} ms (width: " + width + ", height: " + height + ", degrees: " + cDegrees + ")");
@@ -160,7 +167,7 @@ namespace ZXing.Mobile.CameraAccess
 
             using (var stream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
             {
-                SKData d = SKImage.FromBitmap(img).Encode(SKEncodedImageFormat.Png, 100);
+                var d = SKImage.FromBitmap(img).Encode(SKEncodedImageFormat.Png, 100);
                 d.SaveTo(stream);
             }
         }

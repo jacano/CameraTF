@@ -55,8 +55,6 @@
     <Compile Include="CameraAccess\CameraEventsListener.cs" />
     <Compile Include="CameraAccess\Torch.cs" />
     <Compile Include="CameraResolution.cs" />
-    <Compile Include="Helpers\FastJavaArrayEx.cs" />
-    <Compile Include="Helpers\ColorUnion.cs" />
     <Compile Include="Helpers\MathHelper.cs" />
     <Compile Include="Helpers\YuvHelper.cs" />
     <Compile Include="IScannerView.cs" />

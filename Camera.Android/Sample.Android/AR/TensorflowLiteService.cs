@@ -1,6 +1,5 @@
 ﻿using Emgu.TF.Lite;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -8,7 +7,7 @@ using TailwindTraders.Mobile.Features.Scanning.AR;
 
 namespace TailwindTraders.Mobile.Features.Scanning
 {
-    public class TensorflowLiteService
+    public unsafe class TensorflowLiteService
     {
         public const int ModelInputSize = 300;
         public const float MinScore = 0.6f;
@@ -16,18 +15,14 @@ namespace TailwindTraders.Mobile.Features.Scanning
         private const int LabelOffset = 1;
 
         private byte[] quantizedColors;
-        private bool initialized = false;
         private string[] labels = null;
         private FlatBufferModel model;
 
-        private bool useNumThreads = true;
+        private bool useNumThreads;
 
-        public void Initialize(Stream modelData, Stream labelData)
+        public bool Initialize(Stream modelData, Stream labelData, bool useNumThreads)
         {
-            if (initialized)
-            {
-                return;
-            }
+            this.useNumThreads = useNumThreads;
 
             using (var ms = new MemoryStream())
             {
@@ -48,55 +43,46 @@ namespace TailwindTraders.Mobile.Features.Scanning
                 model = new FlatBufferModel(ms.ToArray());
             }
 
-            if (!model.CheckModelIdentifier())
-            {
-                throw new Exception("Model identifier check failed");
-            }
-
             quantizedColors = new byte[ModelInputSize * ModelInputSize * 3];
 
-            initialized = true;
-        }
-
-        public void Recognize(int[] colors)
-        {
-            if (!initialized)
+            if (!model.CheckModelIdentifier())
             {
-                throw new Exception("Initialize TensorflowLiteService first");
+                return false;
             }
 
+            return true;
+        }
+
+        public bool Recognize(int* colors, int colorsCount)
+        {
             using (var op = new BuildinOpResolver())
             {
                 using (var interpreter = new Interpreter(model, op))
                 {
-                    InvokeInterpreter(colors, interpreter);
+                    if (useNumThreads)
+                    {
+                        interpreter.SetNumThreads(Environment.ProcessorCount);
+                    }
+
+                    return InvokeInterpreter(interpreter, colors, colorsCount);
                 }
             }
         }
 
-        private void InvokeInterpreter(int[] colors, Interpreter interpreter)
+        private bool InvokeInterpreter(Interpreter interpreter, int* colors, int colorsCount)
         {
-            if (useNumThreads)
-            {
-                interpreter.SetNumThreads(Environment.ProcessorCount);
-            }
-
             var allocateTensorStatus = interpreter.AllocateTensors();
             if (allocateTensorStatus == Status.Error)
             {
-                throw new Exception("Failed to allocate tensor");
+                return false;
             }
 
             var input = interpreter.GetInput();
             using (var inputTensor = interpreter.GetTensor(input[0]))
             {
-                CopyColorsToTensor(inputTensor.DataPointer, colors);
+                CopyColorsToTensor(inputTensor.DataPointer, colors, colorsCount);
 
-                var watchInvoke = Stopwatch.StartNew();
                 interpreter.Invoke();
-                watchInvoke.Stop();
-
-                Console.WriteLine($"InterpreterInvoke: {watchInvoke.ElapsedMilliseconds}ms");
             }
 
             var output = interpreter.GetOutput();
@@ -108,19 +94,21 @@ namespace TailwindTraders.Mobile.Features.Scanning
                 outputTensors[i] = interpreter.GetTensor(outputIndex + i);
             }
 
-            var detection_boxes_out = outputTensors[0].GetData() as float[];
-            var detection_classes_out = outputTensors[1].GetData() as float[];
-            var detection_scores_out = outputTensors[2].GetData() as float[];
-            var num_detections_out = outputTensors[3].GetData() as float[];
+            var detection_boxes_out = (float[])outputTensors[0].GetData();
+            var detection_classes_out = (float[])outputTensors[1].GetData();
+            var detection_scores_out = (float[])outputTensors[2].GetData();
+            var num_detections_out = (float[])outputTensors[3].GetData();
 
             var numDetections = num_detections_out[0];
 
             LogDetectionResults(detection_classes_out, detection_scores_out, detection_boxes_out, (int)numDetections);
+
+            return true;
         }
 
-        private void CopyColorsToTensor(IntPtr dest, int[] colors)
+        private void CopyColorsToTensor(IntPtr dest, int* colors, int colorsCount)
         {
-            for (var i = 0; i < colors.Length; ++i)
+            for (var i = 0; i < colorsCount; ++i)
             {
                 var val = colors[i];
 
