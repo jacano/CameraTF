@@ -22,17 +22,6 @@ namespace CameraTF.Helpers
             TextSize = 40,
         };
 
-        private static readonly float statsMargin = 5;
-
-        private static float statsHeight;
-
-        static DrawingHelper()
-        {
-            var textBounds = new SKRect();
-            statsPaint.MeasureText("123", ref textBounds);
-            statsHeight = textBounds.Height;
-        }
-
         public static void DrawBoundingBox(
             SKCanvas canvas,
             float width,
@@ -40,7 +29,9 @@ namespace CameraTF.Helpers
             float xmin,
             float ymin,
             float xmax,
-            float ymax)
+            float ymax,
+            float score,
+            string label)
         {
             var top = xmin * height;
             var left = ymin * width;
@@ -50,20 +41,24 @@ namespace CameraTF.Helpers
             var rect = new SKRect(left, top, right, bottom);
 
             canvas.DrawRoundRect(rect, boundingBoxCornerRadius, boundingBoxPaint);
+
+            canvas.DrawText(
+                $"{label} - {score}",
+                left,
+                bottom,
+                statsPaint);
         }
 
         public static void DrawStats(
-            SKCanvas canvas,
-            float width,
-            float height,
-            long elapsed,
-            float score,
-            string label)
+           SKCanvas canvas,
+           float x,
+           float y,
+           long elapsed)
         {
             canvas.DrawText(
-                $"{elapsed} ms - {label} - {score}",
-                statsMargin,
-                height - (statsHeight / 2) - statsMargin,
+                $"{elapsed} ms",
+                x,
+                y,
                 statsPaint);
         }
     }

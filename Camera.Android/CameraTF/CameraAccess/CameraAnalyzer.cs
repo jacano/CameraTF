@@ -129,15 +129,10 @@ namespace CameraTF.CameraAccess
         private void InitTensorflowLineService()
         {
             var model = "hardhat_detect.tflite";
-            var labels = "hardhat_labels_list.txt";
-
             using (var modelData = Application.Context.Assets.Open(model))
             {
-                using (var labelData = Application.Context.Assets.Open(labels))
-                {
-                    tfService = new TensorflowLiteService();
-                    tfService.Initialize(modelData, labelData, useNumThreads: true);
-                }
+                tfService = new TensorflowLiteService();
+                tfService.Initialize(modelData, useNumThreads: true);
             }
         }
 

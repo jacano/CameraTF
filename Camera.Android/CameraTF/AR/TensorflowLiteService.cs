@@ -4,39 +4,21 @@ using PubSub.Extension;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace CameraTF
 {
     public unsafe class TensorflowLiteService
     {
         public const int ModelInputSize = 300;
-        public const float MinScore = 0.6f;
-
-        private const int LabelOffset = 1;
 
         private byte[] quantizedColors;
-        private string[] labels = null;
         private FlatBufferModel model;
 
         private bool useNumThreads;
 
-        public bool Initialize(Stream modelData, Stream labelData, bool useNumThreads)
+        public bool Initialize(Stream modelData, bool useNumThreads)
         {
             this.useNumThreads = useNumThreads;
-
-            using (var ms = new MemoryStream())
-            {
-                labelData.CopyTo(ms);
-
-                var labelContent = Encoding.Default.GetString(ms.ToArray());
-
-                labels = labelContent
-                    .Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(x => x.Trim())
-                    .ToArray();
-            }
 
             using (var ms = new MemoryStream())
             {
@@ -105,9 +87,18 @@ namespace CameraTF
             var detection_scores_out = (float[])outputTensors[2].GetData();
             var num_detections_out = (float[])outputTensors[3].GetData();
 
-            var numDetections = num_detections_out[0];
+            var numDetections = (int)num_detections_out[0];
 
-            LogDetectionResults(detection_classes_out, detection_scores_out, detection_boxes_out, (int)numDetections, stopwatch.ElapsedMilliseconds);
+            var detectionMessage = new DetectionMessage()
+            {
+                InferenceElapsedMs = stopwatch.ElapsedMilliseconds,
+                NumDetections = numDetections,
+                Labels = detection_classes_out,
+                Scores = detection_scores_out,
+                BoundingBoxes = detection_boxes_out,
+            };
+
+            this.Publish(detectionMessage);
 
             return true;
         }
@@ -129,46 +120,6 @@ namespace CameraTF
             }
 
             System.Runtime.InteropServices.Marshal.Copy(quantizedColors, 0, dest, quantizedColors.Length);
-        }
-
-        private void LogDetectionResults(
-            float[] detection_classes_out,
-            float[] detection_scores_out,
-            float[] detection_boxes_out,
-            int numDetections,
-            long elapsedMilliseconds)
-        {
-            for (int i = 0; i < numDetections; i++)
-            {
-                var score = detection_scores_out[i];
-                var classId = (int)detection_classes_out[i];
-
-                var labelIndex = classId + LabelOffset;
-                if (labelIndex.Between(0, labels.Length - 1))
-                {
-                    var label = labels[labelIndex];
-                    if (score >= MinScore)
-                    {
-                        var xmin = detection_boxes_out[0];
-                        var ymin = detection_boxes_out[1];
-                        var xmax = detection_boxes_out[2];
-                        var ymax = detection_boxes_out[3];
-
-                        var detectionMessage = new DetectionMessage()
-                        {
-                            InferenceElapsedMs = elapsedMilliseconds,
-                            Label = label,
-                            Score = score,
-                            Xmin = xmin,
-                            Ymin = ymin,
-                            Xmax = xmax,
-                            Ymax = ymax,
-                        };
-
-                        this.Publish(detectionMessage);
-                    }
-                }
-            }
         }
     }
 }

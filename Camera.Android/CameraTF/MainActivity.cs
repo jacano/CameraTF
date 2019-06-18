@@ -6,10 +6,12 @@ using Android.Runtime;
 using Android.Widget;
 using Android.Support.V7.App;
 using SkiaSharp.Views.Android;
-using SkiaSharp;
 using CameraTF.AR;
 using PubSub.Extension;
 using CameraTF.Helpers;
+using System.IO;
+using System;
+using System.Linq;
 
 namespace CameraTF
 {
@@ -22,6 +24,11 @@ namespace CameraTF
             Android.Manifest.Permission.WriteExternalStorage
         };
 
+        private const float MinScore = 0.6f;
+        private const int LabelOffset = 1;
+
+        private string[] labels;
+
         private DetectionMessage lastDetectionMessage;
         private SKCanvasView canvasView;
 
@@ -32,9 +39,11 @@ namespace CameraTF
             this.RequestWindowFeature(WindowFeatures.NoTitle);
 
             this.Window.AddFlags(WindowManagerFlags.Fullscreen);
-            this.Window.AddFlags(WindowManagerFlags.KeepScreenOn); 
+            this.Window.AddFlags(WindowManagerFlags.KeepScreenOn);
 
             SetContentView(Resource.Layout.activitylayout);
+
+            LoadModelLabels();
 
             this.Subscribe<DetectionMessage>((d) =>
             {
@@ -53,6 +62,22 @@ namespace CameraTF
             mainView.AddView(canvasView);
         }
 
+        private void LoadModelLabels()
+        {
+            var labelsFilename = "hardhat_labels_list.txt";
+            using (var labelData = Application.Context.Assets.Open(labelsFilename))
+            {
+                using (var reader = new StreamReader(labelData))
+                {
+                    var text = reader.ReadToEnd();
+                    labels = text
+                        .Split(new[] { System.Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => x.Trim())
+                        .ToArray();
+                }
+            }
+        }
+
         private void Canvas_PaintSurface(object sender, SKPaintSurfaceEventArgs e)
         {
             var canvas = e.Surface.Canvas;
@@ -61,27 +86,39 @@ namespace CameraTF
             var canvasHeight = e.Info.Height;
 
             var d = lastDetectionMessage;
-
             if (d == null) return;
 
             canvas.Clear();
 
-            DrawingHelper.DrawBoundingBox(
-                canvas,
-                canvasWidth,
-                canvasHeight,
-                d.Xmin,
-                d.Ymin,
-                d.Xmax,
-                d.Ymax);
+            for (var i = 0; i < d.NumDetections; i++)
+            {
+                var score = d.Scores[i];
+                var labelIndex = (int)d.Labels[i];
+                var xmin = d.BoundingBoxes[i * 4 + 0];
+                var ymin = d.BoundingBoxes[i * 4 + 1];
+                var xmax = d.BoundingBoxes[i * 4 + 2];
+                var ymax = d.BoundingBoxes[i * 4 + 3];
+
+                if (!labelIndex.Between(0, labels.Length - 1)) continue;
+                if (score < MinScore) continue;
+
+                DrawingHelper.DrawBoundingBox(
+                    canvas,
+                    canvasWidth,
+                    canvasHeight,
+                    xmin,
+                    ymin,
+                    xmax,
+                    ymax,
+                    score,
+                    labels[labelIndex + LabelOffset]);
+            }
 
             DrawingHelper.DrawStats(
                 canvas,
-                canvasWidth,
-                canvasHeight,
-                d.InferenceElapsedMs,
-                d.Score,
-                d.Label);
+                5,
+                canvasHeight - 3,
+                d.InferenceElapsedMs);
 
             lastDetectionMessage = null;
         }
