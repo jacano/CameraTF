@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Android.App;
 using Android.Views;
 using ApxLabs.FastAndroidCamera;
 using SkiaSharp;
@@ -27,10 +28,14 @@ namespace CameraTF.CameraAccess
         private GCHandle imageGCHandle;
         private IntPtr imageIntPtr;
 
+        private TensorflowLiteService tfService;
+
         public CameraAnalyzer(SurfaceView surfaceView)
         {
             cameraEventListener = new CameraEventsListener();
             cameraController = new CameraController(surfaceView, cameraEventListener);
+
+            InitTensorflowLineService();
         }
 
         public void SetupCamera()
@@ -94,8 +99,6 @@ namespace CameraTF.CameraAccess
                 inputScaledRotated = new SKBitmap(outputInfo);
             }
 
-            var stopwatch = Stopwatch.StartNew();
-
             var pY = fastArray.Raw;
             var pUV = pY + width * height;
             YuvHelper.ConvertYUV420SPToARGB8888(pY, pUV, (int*)imageIntPtr, width, height);
@@ -109,11 +112,7 @@ namespace CameraTF.CameraAccess
             var colors = inputScaledRotated.GetPixels();
             var colorCount = TensorflowLiteService.ModelInputSize * TensorflowLiteService.ModelInputSize;
 
-            MainActivity.tfService.Recognize((int*)colors, colorCount);
-
-            stopwatch.Stop();
-
-            Debug.WriteLine($"{stopwatch.ElapsedMilliseconds} ms");
+            tfService.Recognize((int*)colors, colorCount);
         }
 
         private void RotateBitmap(SKBitmap bitmap, int degrees)
@@ -124,6 +123,21 @@ namespace CameraTF.CameraAccess
                 surface.RotateDegrees(degrees);
                 surface.Translate(-inputScaledRotated.Width / 2, -inputScaledRotated.Height / 2);
                 surface.DrawBitmap(bitmap, 0, 0);
+            }
+        }
+
+        private void InitTensorflowLineService()
+        {
+            var model = "hardhat_detect.tflite";
+            var labels = "hardhat_labels_list.txt";
+
+            using (var modelData = Application.Context.Assets.Open(model))
+            {
+                using (var labelData = Application.Context.Assets.Open(labels))
+                {
+                    tfService = new TensorflowLiteService();
+                    tfService.Initialize(modelData, labelData, useNumThreads: true);
+                }
             }
         }
 

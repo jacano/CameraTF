@@ -5,6 +5,11 @@ using Android.OS;
 using Android.Runtime;
 using Android.Widget;
 using Android.Support.V7.App;
+using SkiaSharp.Views.Android;
+using SkiaSharp;
+using CameraTF.AR;
+using PubSub.Extension;
+using CameraTF.Helpers;
 
 namespace CameraTF
 {
@@ -17,11 +22,8 @@ namespace CameraTF
             Android.Manifest.Permission.WriteExternalStorage
         };
 
-        public static TensorflowLiteService tfService;
-
-        private CameraSurfaceView scanner;
-
-        private FrameLayout frameLayout1;
+        private DetectionMessage lastDetectionMessage;
+        private SKCanvasView canvasView;
 
         protected override void OnCreate (Bundle bundle)
         {
@@ -34,27 +36,54 @@ namespace CameraTF
 
             SetContentView(Resource.Layout.activitylayout);
 
-            frameLayout1 = this.FindViewById<FrameLayout>(Resource.Id.frameLayout1);
+            this.Subscribe<DetectionMessage>((d) =>
+            {
+                lastDetectionMessage = d;
 
-            InitTensorflowLineService();
+                this.canvasView.Invalidate();
+            });
 
-            scanner = new CameraSurfaceView(this);
-            frameLayout1.AddView(scanner);
+            this.canvasView = new SKCanvasView(this);
+            var cameraSurface = new CameraSurfaceView(this);
+
+            canvasView.PaintSurface += Canvas_PaintSurface;
+
+            var mainView = this.FindViewById<FrameLayout>(Resource.Id.frameLayout1);
+            mainView.AddView(cameraSurface);
+            mainView.AddView(canvasView);
         }
 
-        private void InitTensorflowLineService()
+        private void Canvas_PaintSurface(object sender, SKPaintSurfaceEventArgs e)
         {
-            var model = "hardhat_detect.tflite";
-            var labels = "hardhat_labels_list.txt";
+            var canvas = e.Surface.Canvas;
 
-            using (var modelData = Assets.Open(model))
-            {
-                using (var labelData = Assets.Open(labels))
-                {
-                    tfService = new TensorflowLiteService();
-                    tfService.Initialize(modelData, labelData, useNumThreads: true);
-                }
-            }
+            var canvasWidth = e.Info.Width;
+            var canvasHeight = e.Info.Height;
+
+            var d = lastDetectionMessage;
+
+            if (d == null) return;
+
+            canvas.Clear();
+
+            DrawingHelper.DrawBoundingBox(
+                canvas,
+                canvasWidth,
+                canvasHeight,
+                d.Xmin,
+                d.Ymin,
+                d.Xmax,
+                d.Ymax);
+
+            DrawingHelper.DrawStats(
+                canvas,
+                canvasWidth,
+                canvasHeight,
+                d.InferenceElapsedMs,
+                d.Score,
+                d.Label);
+
+            lastDetectionMessage = null;
         }
 
         protected override void OnResume ()
@@ -70,5 +99,4 @@ namespace CameraTF
             PermissionsHandler.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
-
 }

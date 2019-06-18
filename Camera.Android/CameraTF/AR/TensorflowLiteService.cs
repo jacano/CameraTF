@@ -1,4 +1,6 @@
-﻿using Emgu.TF.Lite;
+﻿using CameraTF.AR;
+using Emgu.TF.Lite;
+using PubSub.Extension;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -71,6 +73,8 @@ namespace CameraTF
 
         private bool InvokeInterpreter(Interpreter interpreter, int* colors, int colorsCount)
         {
+            var stopwatch = new Stopwatch();
+
             var allocateTensorStatus = interpreter.AllocateTensors();
             if (allocateTensorStatus == Status.Error)
             {
@@ -82,7 +86,9 @@ namespace CameraTF
             {
                 CopyColorsToTensor(inputTensor.DataPointer, colors, colorsCount);
 
+                stopwatch.Start();
                 interpreter.Invoke();
+                stopwatch.Stop();
             }
 
             var output = interpreter.GetOutput();
@@ -101,7 +107,7 @@ namespace CameraTF
 
             var numDetections = num_detections_out[0];
 
-            LogDetectionResults(detection_classes_out, detection_scores_out, detection_boxes_out, (int)numDetections);
+            LogDetectionResults(detection_classes_out, detection_scores_out, detection_boxes_out, (int)numDetections, stopwatch.ElapsedMilliseconds);
 
             return true;
         }
@@ -129,7 +135,8 @@ namespace CameraTF
             float[] detection_classes_out,
             float[] detection_scores_out,
             float[] detection_boxes_out,
-            int numDetections)
+            int numDetections,
+            long elapsedMilliseconds)
         {
             for (int i = 0; i < numDetections; i++)
             {
@@ -147,7 +154,18 @@ namespace CameraTF
                         var xmax = detection_boxes_out[2];
                         var ymax = detection_boxes_out[3];
 
-                        Debug.WriteLine($"label: {label} score: {score}");
+                        var detectionMessage = new DetectionMessage()
+                        {
+                            InferenceElapsedMs = elapsedMilliseconds,
+                            Label = label,
+                            Score = score,
+                            Xmin = xmin,
+                            Ymin = ymin,
+                            Xmax = xmax,
+                            Ymax = ymax,
+                        };
+
+                        this.Publish(detectionMessage);
                     }
                 }
             }
