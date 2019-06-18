@@ -68,14 +68,12 @@ namespace CameraTF.CameraAccess
             {
                 camera.SetPreviewDisplay(holder);
                 
-
                 var previewParameters = camera.GetParameters();
                 var previewSize = previewParameters.PreviewSize;
                 var bitsPerPixel = ImageFormat.GetBitsPerPixel(previewParameters.PreviewFormat);
 
-
                 int bufferSize = (previewSize.Width * previewSize.Height * bitsPerPixel) / 8;
-				const int NUM_PREVIEW_BUFFERS = 5;
+				const int NUM_PREVIEW_BUFFERS = 25;
 				for (uint i = 0; i < NUM_PREVIEW_BUFFERS; ++i)
 				{
 					using (var buffer = new FastJavaByteArray(bufferSize))
