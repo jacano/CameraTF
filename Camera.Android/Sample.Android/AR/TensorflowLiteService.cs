@@ -31,9 +31,9 @@ namespace TailwindTraders.Mobile.Features.Scanning
                 var labelContent = Encoding.Default.GetString(ms.ToArray());
 
                 labels = labelContent
-                .Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => x.Trim())
-                .ToArray();
+                    .Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(x => x.Trim())
+                    .ToArray();
             }
 
             using (var ms = new MemoryStream())

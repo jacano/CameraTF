@@ -132,9 +132,10 @@ namespace ZXing.Mobile.CameraAccess
                 var rgbGCHandle = GCHandle.Alloc(rgba, GCHandleType.Pinned);
                 output = rgbGCHandle.AddrOfPinnedObject();
 
-                var outputInfo = new SKImageInfo(TensorflowLiteService.ModelInputSize, TensorflowLiteService.ModelInputSize, SKColorType.Rgba8888);
+                var inputInfo = new SKImageInfo(width, height, SkiaSharp.SKColorType.Rgba8888);
+                skiaRGB = new SKBitmap(inputInfo);
 
-                skiaRGB = new SKBitmap(new SKImageInfo(width, height, SkiaSharp.SKColorType.Rgba8888));
+                var outputInfo = new SKImageInfo(TensorflowLiteService.ModelInputSize, TensorflowLiteService.ModelInputSize, SKColorType.Rgba8888);
                 skiaScaledRGB = new SKBitmap(outputInfo);
                 skiaRotatedRGB = new SKBitmap(outputInfo);
             }
@@ -153,11 +154,11 @@ namespace ZXing.Mobile.CameraAccess
             RotateBitmap(skiaScaledRGB, cDegrees);
 
             var colors = skiaRotatedRGB.GetPixels();
+            var colorCount = TensorflowLiteService.ModelInputSize * TensorflowLiteService.ModelInputSize;
 
-            ZxingActivity.tfService.Recognize((int*)colors, rgbaCount);
+            ZxingActivity.tfService.Recognize((int*)colors, colorCount);
 
-            PerformanceCounter.Stop(start,
-                "Decode Time: {0} ms (width: " + width + ", height: " + height + ", degrees: " + cDegrees + ")");
+            PerformanceCounter.Stop(start, "{0} ms");
         }
 
         private void SaveSkiaImg(SKBitmap img)
