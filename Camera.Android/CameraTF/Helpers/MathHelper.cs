@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TailwindTraders.Mobile.Features.Scanning.AR
+namespace CameraTF
 {
     public static class MathHelper
     {

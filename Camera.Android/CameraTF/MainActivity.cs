@@ -3,15 +3,13 @@ using Android.Content.PM;
 using Android.Views;
 using Android.OS;
 using Android.Runtime;
-using Android.Support.V4.App;
-using Sample.Android;
-using TailwindTraders.Mobile.Features.Scanning;
 using Android.Widget;
+using Android.Support.V7.App;
 
-namespace ZXing.Mobile
+namespace CameraTF
 {
-    [Activity (Label = "Scanner", MainLauncher = true, Theme = "@android:style/Theme.Holo.Light", ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.KeyboardHidden | ConfigChanges.ScreenLayout)]
-    public class ZxingActivity : FragmentActivity
+    [Activity (MainLauncher = true, Theme = "@style/AppTheme.NoActionBar", ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.KeyboardHidden | ConfigChanges.ScreenLayout)]
+    public class MainActivity : AppCompatActivity
     {
         public static readonly string[] RequiredPermissions = new[] {
             Android.Manifest.Permission.Camera,
@@ -21,7 +19,7 @@ namespace ZXing.Mobile
 
         public static TensorflowLiteService tfService;
 
-        private ZXingSurfaceView scanner;
+        private CameraSurfaceView scanner;
 
         private FrameLayout frameLayout1;
 
@@ -31,16 +29,16 @@ namespace ZXing.Mobile
 
             this.RequestWindowFeature(WindowFeatures.NoTitle);
 
-            this.Window.AddFlags(WindowManagerFlags.Fullscreen); //to show
-            this.Window.AddFlags(WindowManagerFlags.KeepScreenOn); //Don't go to sleep while scanning
+            this.Window.AddFlags(WindowManagerFlags.Fullscreen);
+            this.Window.AddFlags(WindowManagerFlags.KeepScreenOn); 
 
-            SetContentView(Resource.Layout.zxingscanneractivitylayout);
+            SetContentView(Resource.Layout.activitylayout);
 
             frameLayout1 = this.FindViewById<FrameLayout>(Resource.Id.frameLayout1);
 
             InitTensorflowLineService();
 
-            scanner = new ZXingSurfaceView(this);
+            scanner = new CameraSurfaceView(this);
             frameLayout1.AddView(scanner);
         }
 
@@ -63,25 +61,13 @@ namespace ZXing.Mobile
         {
             base.OnResume ();
 
-            if (ZXing.Net.Mobile.Android.PermissionsHandler.NeedsPermissionRequest(this))
-                ZXing.Net.Mobile.Android.PermissionsHandler.RequestPermissionsAsync(this);
-            else
-                scanner.StartScanning();
+            if (PermissionsHandler.NeedsPermissionRequest(this))
+                PermissionsHandler.RequestPermissionsAsync(this);
         }
 
         public override void OnRequestPermissionsResult (int requestCode, string[] permissions, [GeneratedEnum] Permission[] grantResults)
         { 
-            ZXing.Net.Mobile.Android.PermissionsHandler.OnRequestPermissionsResult(requestCode, permissions, grantResults);
-        }
-
-        public override bool OnKeyDown (Keycode keyCode, KeyEvent e)
-        {
-            switch (keyCode) {
-                case Keycode.Focus:
-                    return true;
-            }
-
-            return base.OnKeyDown (keyCode, e);
+            PermissionsHandler.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Android.Content;
 using Android.Graphics;
@@ -10,7 +9,7 @@ using Android.Views;
 using ApxLabs.FastAndroidCamera;
 using Camera = Android.Hardware.Camera;
 
-namespace ZXing.Mobile.CameraAccess
+namespace CameraTF.CameraAccess
 {
     public class CameraController
     {
@@ -53,7 +52,7 @@ namespace ZXing.Mobile.CameraAccess
         {
             if (Camera != null) return;
 
-            ZXing.Net.Mobile.Android.PermissionsHandler.CheckCameraPermissions(context);
+            PermissionsHandler.CheckCameraPermissions(context);
 
             OpenCamera();
 
@@ -90,58 +89,6 @@ namespace ZXing.Mobile.CameraAccess
             }
             finally
             {
-            }
-
-            // Docs suggest if Auto or Macro modes, we should invoke AutoFocus at least once
-            var currentFocusMode = Camera.GetParameters().FocusMode;
-            if (currentFocusMode == Camera.Parameters.FocusModeAuto
-                || currentFocusMode == Camera.Parameters.FocusModeMacro)
-                AutoFocus();
-        }
-
-        public void AutoFocus()
-        {
-            AutoFocus(0, 0, false);
-        }
-
-        public void AutoFocus(int x, int y)
-        {
-            // The bounds for focus areas are actually -1000 to 1000
-            // So we need to translate the touch coordinates to this scale
-            var focusX = x / surfaceView.Width * 2000 - 1000;
-            var focusY = y / surfaceView.Height * 2000 - 1000;
-
-            // Call the autofocus with our coords
-            AutoFocus(focusX, focusY, true);
-        }
-
-        public void ShutdownCamera()
-        {
-            if (Camera == null) return;
-
-            // camera release logic takes about 0.005 sec so there is no need in async releasing
-            try
-            {
-                try
-                {
-                    Camera.StopPreview();
-                    Camera.SetNonMarshalingPreviewCallback(null);
-
-                    //Camera.SetPreviewCallback(null);
-
-                    System.Diagnostics.Debug.WriteLine($"Calling SetPreviewDisplay: null");
-                    Camera.SetPreviewDisplay(null);
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine(ex.ToString());
-                }
-                Camera.Release();
-                Camera = null;
-            }
-            catch (Exception e)
-            {
-                System.Diagnostics.Debug.WriteLine(e.ToString());
             }
         }
 
@@ -197,8 +144,6 @@ namespace ZXing.Mobile.CameraAccess
             }
             catch (Exception ex)
             {
-                ShutdownCamera();
-
                 System.Diagnostics.Debug.WriteLine($"Setup Error: {ex}");
             }
         }
@@ -217,11 +162,6 @@ namespace ZXing.Mobile.CameraAccess
             parameters.PreviewFormat = ImageFormatType.Nv21;
 
             var supportedFocusModes = parameters.SupportedFocusModes;
-
-            //if (_scannerHost.ScanningOptions.DisableAutofocus)
-            //    parameters.FocusMode = Camera.Parameters.FocusModeFixed;
-
-            //TODO
 
             if (Build.VERSION.SdkInt >= BuildVersionCodes.IceCreamSandwich &&
                 supportedFocusModes.Contains(Camera.Parameters.FocusModeContinuousPicture))
@@ -303,68 +243,6 @@ namespace ZXing.Mobile.CameraAccess
             Camera.SetParameters(parameters);
 
             SetCameraDisplayOrientation();
-        }
-
-        private void AutoFocus(int x, int y, bool useCoordinates)
-        {
-            if (Camera == null) return;
-
-			//if (_scannerHost.ScanningOptions.DisableAutofocus)
-			//{
-			//	Android.Util.Log.Debug(MobileBarcodeScanner.TAG, "AutoFocus Disabled");
-			//	return;
-			//}
-
-            // TODO
-
-            var cameraParams = Camera.GetParameters();
-
-            System.Diagnostics.Debug.WriteLine("AutoFocus Requested");
-
-            // Cancel any previous requests
-            Camera.CancelAutoFocus();
-
-            try
-            {
-                // If we want to use coordinates
-                // Also only if our camera supports Auto focus mode
-                // Since FocusAreas only really work with FocusModeAuto set
-                if (useCoordinates
-                    && cameraParams.SupportedFocusModes.Contains(Camera.Parameters.FocusModeAuto))
-                {
-                    // Let's give the touched area a 20 x 20 minimum size rect to focus on
-                    // So we'll offset -10 from the center of the touch and then 
-                    // make a rect of 20 to give an area to focus on based on the center of the touch
-                    x = x - 10;
-                    y = y - 10;
-
-                    // Ensure we don't go over the -1000 to 1000 limit of focus area
-                    if (x >= 1000)
-                        x = 980;
-                    if (x < -1000)
-                        x = -1000;
-                    if (y >= 1000)
-                        y = 980;
-                    if (y < -1000)
-                        y = -1000;
-
-                    // Explicitly set FocusModeAuto since Focus areas only work with this setting
-                    cameraParams.FocusMode = Camera.Parameters.FocusModeAuto;
-                    // Add our focus area
-                    cameraParams.FocusAreas = new List<Camera.Area>
-                    {
-                        new Camera.Area(new Rect(x, y, x + 20, y + 20), 1000)
-                    };
-                    Camera.SetParameters(cameraParams);
-                }
-
-                // Finally autofocus (weather we used focus areas or not)
-                Camera.AutoFocus(cameraEventListener);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("AutoFocus Failed: {0}", ex);
-            }
         }
 
         private void SetCameraDisplayOrientation()

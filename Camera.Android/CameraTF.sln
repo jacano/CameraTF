@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26228.9
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample.Android", "Sample.Android\Sample.Android.csproj", "{660D9346-D70B-4C54-8402-E5F6DF48E9AC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CameraTF", "CameraTF\CameraTF.csproj", "{660D9346-D70B-4C54-8402-E5F6DF48E9AC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Emgu.TF.Lite", "Emgu.TF.Lite\Emgu.TF.Lite.csproj", "{D7707A6B-D4DB-4979-B04C-AA1C179CEBE9}"
 EndProject

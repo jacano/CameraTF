@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using ZXing.Mobile;
 using System.Linq;
 using Android.App;
 using System.Threading.Tasks;
@@ -9,7 +8,7 @@ using Android.Content;
 using Android.Support.V4.Content;
 using Android.Support.V4.App;
 
-namespace ZXing.Net.Mobile.Android
+namespace CameraTF
 {
     public static class PermissionsHandler
     {
@@ -28,7 +27,7 @@ namespace ZXing.Net.Mobile.Android
             var permissionsToRequest = new List<string>();
 
             // Check and request any permissions
-            foreach (var permission in ZxingActivity.RequiredPermissions)
+            foreach (var permission in MainActivity.RequiredPermissions)
             {
                 if (IsPermissionInManifest(context, permission))
                 {
@@ -48,7 +47,7 @@ namespace ZXing.Net.Mobile.Android
             var permissionsToRequest = new List<string>();
 
             // Check and request any permissions
-            foreach (var permission in ZxingActivity.RequiredPermissions)
+            foreach (var permission in MainActivity.RequiredPermissions)
             {
                 if (IsPermissionInManifest(activity, permission))
                 {
@@ -147,8 +146,8 @@ namespace ZXing.Net.Mobile.Android
 
                 if (throwOnError)
                 {
-                    var msg = "ZXing.Net.Mobile requires: " + permission + ", but was not found in your AndroidManifest.xml file.";
-                    global::Android.Util.Log.Error("ZXing.Net.Mobile", msg);
+                    var msg = "CameraTF requires: " + permission + ", but was not found in your AndroidManifest.xml file.";
+                    System.Diagnostics.Debug.WriteLine(msg);
 
                     throw new UnauthorizedAccessException(msg);
                 }

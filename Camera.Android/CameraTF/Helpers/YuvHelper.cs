@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Sample.Android.Helpers
+namespace CameraTF
 {
     public static unsafe class YuvHelper
     {

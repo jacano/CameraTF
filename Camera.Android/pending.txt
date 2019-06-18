@@ -1,1 +1,0 @@
-https://stackoverflow.com/questions/8340128/decoding-yuv-to-rgb-in-c-c-with-ndk

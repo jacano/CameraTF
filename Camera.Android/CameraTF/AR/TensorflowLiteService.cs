@@ -4,9 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using TailwindTraders.Mobile.Features.Scanning.AR;
 
-namespace TailwindTraders.Mobile.Features.Scanning
+namespace CameraTF
 {
     public unsafe class TensorflowLiteService
     {

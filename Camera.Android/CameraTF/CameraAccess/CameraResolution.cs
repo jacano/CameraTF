@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ZXing.Mobile
+namespace CameraTF.CameraAccess
 {
     public class CameraResolution
     {

@@ -5,11 +5,9 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Android.Views;
 using ApxLabs.FastAndroidCamera;
-using Sample.Android.Helpers;
 using SkiaSharp;
-using TailwindTraders.Mobile.Features.Scanning;
 
-namespace ZXing.Mobile.CameraAccess
+namespace CameraTF.CameraAccess
 {
     public class CameraAnalyzer
     {
@@ -34,39 +32,10 @@ namespace ZXing.Mobile.CameraAccess
             cameraController = new CameraController(surfaceView, cameraEventListener);
         }
 
-        public bool IsAnalyzing { get; private set; }
-
-        public void PauseAnalysis()
-        {
-            IsAnalyzing = false;
-        }
-
-        public void ResumeAnalysis()
-        {
-            IsAnalyzing = true;
-        }
-
-        public void ShutdownCamera()
-        {
-            IsAnalyzing = false;
-            cameraEventListener.OnPreviewFrameReady -= HandleOnPreviewFrameReady;
-            cameraController.ShutdownCamera();
-        }
-
         public void SetupCamera()
         {
             cameraEventListener.OnPreviewFrameReady += HandleOnPreviewFrameReady;
             cameraController.SetupCamera();
-        }
-
-        public void AutoFocus()
-        {
-            cameraController.AutoFocus();
-        }
-
-        public void AutoFocus(int x, int y)
-        {
-            cameraController.AutoFocus(x, y);
         }
 
         public void RefreshCamera()
@@ -77,10 +46,7 @@ namespace ZXing.Mobile.CameraAccess
         private bool CanAnalyzeFrame
         {
             get
-            {
-				if (!IsAnalyzing)
-					return false;
-				
+            {				
                 if (processingTask != null && !processingTask.IsCompleted)
                     return false;
 
@@ -148,7 +114,7 @@ namespace ZXing.Mobile.CameraAccess
             var colors = skiaRotatedRGB.GetPixels();
             var colorCount = TensorflowLiteService.ModelInputSize * TensorflowLiteService.ModelInputSize;
 
-            ZxingActivity.tfService.Recognize((int*)colors, colorCount);
+            MainActivity.tfService.Recognize((int*)colors, colorCount);
 
             stopwatch.Stop();
 
