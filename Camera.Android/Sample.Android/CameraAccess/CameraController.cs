@@ -56,13 +56,10 @@ namespace ZXing.Mobile.CameraAccess
 
             ZXing.Net.Mobile.Android.PermissionsHandler.CheckCameraPermissions(_context);
 
-            var perf = PerformanceCounter.Start();
             OpenCamera();
-            PerformanceCounter.Stop(perf, "Setup Camera took {0}ms");
 
             if (Camera == null) return;
 
-            perf = PerformanceCounter.Start();
             ApplyCameraSettings();
 
             try
@@ -96,7 +93,6 @@ namespace ZXing.Mobile.CameraAccess
             }
             finally
             {
-                PerformanceCounter.Stop(perf, "Setup Camera Parameters took {0}ms");
             }
 
             // Docs suggest if Auto or Macro modes, we should invoke AutoFocus at least once
@@ -127,7 +123,6 @@ namespace ZXing.Mobile.CameraAccess
             if (Camera == null) return;
 
             // camera release logic takes about 0.005 sec so there is no need in async releasing
-            var perf = PerformanceCounter.Start();
             try
             {
                 try
@@ -151,8 +146,6 @@ namespace ZXing.Mobile.CameraAccess
             {
                 Android.Util.Log.Error(MobileBarcodeScanner.TAG, e.ToString());
             }
-
-            PerformanceCounter.Stop(perf, "Shutdown camera took {0}ms");
         }
 
         private void OpenCamera()

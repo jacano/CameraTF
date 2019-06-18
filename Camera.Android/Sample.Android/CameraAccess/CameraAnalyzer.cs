@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -140,7 +141,7 @@ namespace ZXing.Mobile.CameraAccess
                 skiaRotatedRGB = new SKBitmap(outputInfo);
             }
 
-            var start = PerformanceCounter.Start();
+            var stopwatch = Stopwatch.StartNew();
 
             var pY = fastArray.Raw;
             var pUV = pY + rgbaCount;
@@ -158,7 +159,9 @@ namespace ZXing.Mobile.CameraAccess
 
             ZxingActivity.tfService.Recognize((int*)colors, colorCount);
 
-            PerformanceCounter.Stop(start, "{0} ms");
+            stopwatch.Stop();
+
+            Debug.WriteLine($"{stopwatch.ElapsedMilliseconds} ms");
         }
 
         private void RotateBitmap(SKBitmap bitmap, int degrees)

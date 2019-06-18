@@ -138,7 +138,6 @@ namespace ZXing.Net.Mobile.Android
         internal static bool CheckPermissions(Context context, string permission, bool throwOnError = true)
         {
             var result = true;
-            var perf = PerformanceCounter.Start();
 
             global::Android.Util.Log.Debug(MobileBarcodeScanner.TAG, "Checking " + permission + "...");
 
@@ -154,8 +153,6 @@ namespace ZXing.Net.Mobile.Android
                     throw new UnauthorizedAccessException(msg);
                 }
             }
-
-            PerformanceCounter.Stop(perf, "CheckPermissions took {0}ms");
 
             return result;
         }

@@ -1,5 +1,6 @@
 ﻿using Emgu.TF.Lite;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -147,7 +148,7 @@ namespace TailwindTraders.Mobile.Features.Scanning
                         var xmax = detection_boxes_out[2];
                         var ymax = detection_boxes_out[3];
 
-                        Console.WriteLine($"label: {label} score: {score}");
+                        Debug.WriteLine($"label: {label} score: {score}");
                     }
                 }
             }

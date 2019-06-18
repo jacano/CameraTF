@@ -59,7 +59,6 @@
     <Compile Include="Helpers\YuvHelper.cs" />
     <Compile Include="IScannerView.cs" />
     <Compile Include="MobileBarcodeScanner.cs" />
-    <Compile Include="Performance.cs" />
     <Compile Include="Permissions.cs" />
     <Compile Include="PermissionsHandler.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
