@@ -4,7 +4,7 @@ using ApxLabs.FastAndroidCamera;
 
 namespace CameraTF.CameraAccess
 {
-    public class CameraEventsListener : Java.Lang.Object, INonMarshalingPreviewCallback, Camera.IAutoFocusCallback
+    public class CameraEventsListener : Java.Lang.Object, INonMarshalingPreviewCallback
     {
         public event EventHandler<FastJavaByteArray> OnPreviewFrameReady; 
 
@@ -16,11 +16,6 @@ namespace CameraTF.CameraAccess
 
                 camera.AddCallbackBuffer(fastArray);
             }
-        }
-
-        public void OnAutoFocus(bool success, Camera camera)
-        {
-            System.Diagnostics.Debug.WriteLine("AutoFocus {0}", success ? "Succeeded" : "Failed");
         }
     }
 }

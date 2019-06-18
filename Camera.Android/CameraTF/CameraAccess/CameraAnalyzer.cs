@@ -15,16 +15,17 @@ namespace CameraTF.CameraAccess
         private readonly CameraEventsListener cameraEventListener;
         private Task processingTask;
 
-        private int[] rgba;
-        private IntPtr output;
-        private SKBitmap skiaRGB;
-        private SKBitmap skiaScaledRGB;
-        private SKBitmap skiaRotatedRGB;
-
         private int width;
         private int height;
         private int cDegrees;
-        private int rgbaCount;
+
+        private SKBitmap input;
+        private SKBitmap inputScaled;
+        private SKBitmap inputScaledRotated;
+
+        private int[] imageData;
+        private GCHandle imageGCHandle;
+        private IntPtr imageIntPtr;
 
         public CameraAnalyzer(SurfaceView surfaceView)
         {
@@ -76,42 +77,36 @@ namespace CameraTF.CameraAccess
 
         private unsafe void DecodeFrame(FastJavaByteArray fastArray)
         {
-            if (rgba == null)
+            if (input == null)
             {
-                var cameraParameters = cameraController.Camera.GetParameters();
-                width = cameraParameters.PreviewSize.Width;
-                height = cameraParameters.PreviewSize.Height;
-
+                width = cameraController.LastCameraDisplayWidth;
+                height = cameraController.LastCameraDisplayHeight;
                 cDegrees = cameraController.LastCameraDisplayOrientationDegree;
 
-                rgbaCount = width * height;
-                rgba = new int[rgbaCount];
+                imageData = new int[width * height];
+                imageGCHandle = GCHandle.Alloc(imageData, GCHandleType.Pinned);
+                imageIntPtr = imageGCHandle.AddrOfPinnedObject();
 
-                var rgbGCHandle = GCHandle.Alloc(rgba, GCHandleType.Pinned);
-                output = rgbGCHandle.AddrOfPinnedObject();
-
-                var inputInfo = new SKImageInfo(width, height, SKColorType.Rgba8888);
-                skiaRGB = new SKBitmap(inputInfo);
+                input = new SKBitmap(new SKImageInfo(width, height, SKColorType.Rgba8888));
 
                 var outputInfo = new SKImageInfo(TensorflowLiteService.ModelInputSize, TensorflowLiteService.ModelInputSize, SKColorType.Rgba8888);
-                skiaScaledRGB = new SKBitmap(outputInfo);
-                skiaRotatedRGB = new SKBitmap(outputInfo);
+                inputScaled = new SKBitmap(outputInfo);
+                inputScaledRotated = new SKBitmap(outputInfo);
             }
 
             var stopwatch = Stopwatch.StartNew();
 
             var pY = fastArray.Raw;
-            var pUV = pY + rgbaCount;
-            
-            YuvHelper.ConvertYUV420SPToARGB8888(pY, pUV, (int*)output, width, height);
+            var pUV = pY + width * height;
+            YuvHelper.ConvertYUV420SPToARGB8888(pY, pUV, (int*)imageIntPtr, width, height);
 
-            skiaRGB.InstallPixels(skiaRGB.Info, output);
+            input.InstallPixels(input.Info, imageIntPtr);
 
-            skiaRGB.ScalePixels(skiaScaledRGB, SKFilterQuality.None);
+            input.ScalePixels(inputScaled, SKFilterQuality.None);
 
-            RotateBitmap(skiaScaledRGB, cDegrees);
+            RotateBitmap(inputScaled, cDegrees);
 
-            var colors = skiaRotatedRGB.GetPixels();
+            var colors = inputScaledRotated.GetPixels();
             var colorCount = TensorflowLiteService.ModelInputSize * TensorflowLiteService.ModelInputSize;
 
             MainActivity.tfService.Recognize((int*)colors, colorCount);
@@ -123,11 +118,11 @@ namespace CameraTF.CameraAccess
 
         private void RotateBitmap(SKBitmap bitmap, int degrees)
         {
-            using (var surface = new SKCanvas(skiaRotatedRGB))
+            using (var surface = new SKCanvas(inputScaledRotated))
             {
-                surface.Translate(skiaRotatedRGB.Width / 2, skiaRotatedRGB.Height / 2);
+                surface.Translate(inputScaledRotated.Width / 2, inputScaledRotated.Height / 2);
                 surface.RotateDegrees(degrees);
-                surface.Translate(-skiaRotatedRGB.Width / 2, -skiaRotatedRGB.Height / 2);
+                surface.Translate(-inputScaledRotated.Width / 2, -inputScaledRotated.Height / 2);
                 surface.DrawBitmap(bitmap, 0, 0);
             }
         }

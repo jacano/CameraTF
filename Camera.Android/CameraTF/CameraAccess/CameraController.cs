@@ -17,19 +17,23 @@ namespace CameraTF.CameraAccess
         private readonly ISurfaceHolder holder;
         private readonly SurfaceView surfaceView;
         private readonly CameraEventsListener cameraEventListener;
+
         private int cameraId;
+        private Camera camera;
+
+        public int LastCameraDisplayOrientationDegree { get; private set; }
+
+        public int LastCameraDisplayWidth { get; private set; }
+
+        public int LastCameraDisplayHeight { get; private set; }
 
         public CameraController(SurfaceView surfaceView, CameraEventsListener cameraEventListener)
         {
-            context = surfaceView.Context;
-            holder = surfaceView.Holder;
+            this.context = surfaceView.Context;
+            this.holder = surfaceView.Holder;
             this.surfaceView = surfaceView;
             this.cameraEventListener = cameraEventListener;
         }
-
-        public Camera Camera { get; private set; }
-
-        public int LastCameraDisplayOrientationDegree { get; private set; }
 
         public void RefreshCamera()
         {
@@ -39,8 +43,8 @@ namespace CameraTF.CameraAccess
 
             try
             {
-                Camera.SetPreviewDisplay(holder);
-                Camera.StartPreview();
+                camera.SetPreviewDisplay(holder);
+                camera.StartPreview();
             }
             catch (Exception ex)
             {
@@ -50,22 +54,22 @@ namespace CameraTF.CameraAccess
 
         public void SetupCamera()
         {
-            if (Camera != null) return;
+            if (camera != null) return;
 
             PermissionsHandler.CheckCameraPermissions(context);
 
             OpenCamera();
 
-            if (Camera == null) return;
+            if (camera == null) return;
 
             ApplyCameraSettings();
 
             try
             {
-                Camera.SetPreviewDisplay(holder);
+                camera.SetPreviewDisplay(holder);
                 
 
-                var previewParameters = Camera.GetParameters();
+                var previewParameters = camera.GetParameters();
                 var previewSize = previewParameters.PreviewSize;
                 var bitsPerPixel = ImageFormat.GetBitsPerPixel(previewParameters.PreviewFormat);
 
@@ -75,12 +79,12 @@ namespace CameraTF.CameraAccess
 				for (uint i = 0; i < NUM_PREVIEW_BUFFERS; ++i)
 				{
 					using (var buffer = new FastJavaByteArray(bufferSize))
-						Camera.AddCallbackBuffer(buffer);
+						camera.AddCallbackBuffer(buffer);
 				}
 
-				Camera.StartPreview();
+				camera.StartPreview();
 
-                Camera.SetNonMarshalingPreviewCallback(cameraEventListener);
+                camera.SetNonMarshalingPreviewCallback(cameraEventListener);
             }
             catch (Exception ex)
             {
@@ -122,7 +126,7 @@ namespace CameraTF.CameraAccess
                         {
                             System.Diagnostics.Debug.WriteLine(
                                 "Found " + whichCamera + " Camera, opening...");
-                            Camera = Camera.Open(i);
+                            camera = Camera.Open(i);
                             cameraId = i;
                             found = true;
                             break;
@@ -133,13 +137,13 @@ namespace CameraTF.CameraAccess
                     {
                         System.Diagnostics.Debug.WriteLine(
                             "Finding " + whichCamera + " camera failed, opening camera 0...");
-                        Camera = Camera.Open(0);
+                        camera = Camera.Open(0);
                         cameraId = 0;
                     }
                 }
                 else
                 {
-                    Camera = Camera.Open();
+                    camera = Camera.Open();
                 }
             }
             catch (Exception ex)
@@ -150,15 +154,15 @@ namespace CameraTF.CameraAccess
 
         private void ApplyCameraSettings()
         {
-            if (Camera == null)
+            if (camera == null)
             {
                 OpenCamera();
             }
 
             // do nothing if something wrong with camera
-            if (Camera == null) return;
+            if (camera == null) return;
 
-            var parameters = Camera.GetParameters();
+            var parameters = camera.GetParameters();
             parameters.PreviewFormat = ImageFormatType.Nv21;
 
             var supportedFocusModes = parameters.SupportedFocusModes;
@@ -197,11 +201,6 @@ namespace CameraTF.CameraAccess
                     Height = sps.Height
                 });
 
-                // Try and get a desired resolution from the options selector
-                //resolution = _scannerHost.ScanningOptions.GetResolution(availableResolutions.ToList());
-
-                //TODO
-
                 // If the user did not specify a resolution, let's try and find a suitable one
                 if (resolution == null)
                 {
@@ -220,27 +219,18 @@ namespace CameraTF.CameraAccess
                 }
             }
 
-            // Google Glass requires this fix to display the camera output correctly
-            if (Build.Model.Contains("Glass"))
-            {
-                resolution = new CameraResolution
-                {
-                    Width = 640,
-                    Height = 360
-                };
-                // Glass requires 30fps
-                parameters.SetPreviewFpsRange(30000, 30000);
-            }
-
             // Hopefully a resolution was selected at some point
             if (resolution != null)
             {
                 System.Diagnostics.Debug.WriteLine(
                     "Selected Resolution: " + resolution.Width + "x" + resolution.Height);
                 parameters.SetPreviewSize(resolution.Width, resolution.Height);
+
+                LastCameraDisplayWidth = parameters.PreviewSize.Width;
+                LastCameraDisplayHeight = parameters.PreviewSize.Height;
             }
 
-            Camera.SetParameters(parameters);
+            camera.SetParameters(parameters);
 
             SetCameraDisplayOrientation();
         }
@@ -254,7 +244,7 @@ namespace CameraTF.CameraAccess
 
             try
             {
-                Camera.SetDisplayOrientation(degrees);
+                camera.SetDisplayOrientation(degrees);
             }
             catch (Exception ex)
             {
