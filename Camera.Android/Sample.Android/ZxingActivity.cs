@@ -5,8 +5,8 @@ using Android.OS;
 using Android.Runtime;
 using Android.Support.V4.App;
 using Sample.Android;
-using ZXing.Net.Mobile.Android;
 using TailwindTraders.Mobile.Features.Scanning;
+using Android.Widget;
 
 namespace ZXing.Mobile
 {
@@ -19,9 +19,11 @@ namespace ZXing.Mobile
             Android.Manifest.Permission.WriteExternalStorage
         };
 
-        ZXingScannerFragment scannerFragment;
-
         public static TensorflowLiteService tfService;
+
+        private ZXingSurfaceView scanner;
+
+        private FrameLayout frameLayout1;
 
         protected override void OnCreate (Bundle bundle)
         {
@@ -32,13 +34,18 @@ namespace ZXing.Mobile
             this.Window.AddFlags(WindowManagerFlags.Fullscreen); //to show
             this.Window.AddFlags(WindowManagerFlags.KeepScreenOn); //Don't go to sleep while scanning
 
-            //if (ScanningOptions.AutoRotate.HasValue && !ScanningOptions.AutoRotate.Value)
-            //    RequestedOrientation = ScreenOrientation.Nosensor;
-
-            //TODO
-
             SetContentView(Resource.Layout.zxingscanneractivitylayout);
 
+            frameLayout1 = this.FindViewById<FrameLayout>(Resource.Id.frameLayout1);
+
+            InitTensorflowLineService();
+
+            scanner = new ZXingSurfaceView(this);
+            frameLayout1.AddView(scanner);
+        }
+
+        private void InitTensorflowLineService()
+        {
             var model = "hardhat_detect.tflite";
             var labels = "hardhat_labels_list.txt";
 
@@ -50,17 +57,6 @@ namespace ZXing.Mobile
                     tfService.Initialize(modelData, labelData, useNumThreads: true);
                 }
             }
-
-            scannerFragment = new ZXingScannerFragment();
-
-            SupportFragmentManager.BeginTransaction()
-                .Replace(Resource.Id.contentFrame, scannerFragment, "ZXINGFRAGMENT")
-                .Commit();
-        }
-
-        private void CopyFile(string fileName, string path)
-        {
-            
         }
 
         protected override void OnResume ()
@@ -70,7 +66,7 @@ namespace ZXing.Mobile
             if (ZXing.Net.Mobile.Android.PermissionsHandler.NeedsPermissionRequest(this))
                 ZXing.Net.Mobile.Android.PermissionsHandler.RequestPermissionsAsync(this);
             else
-                scannerFragment.StartScanning();
+                scanner.StartScanning();
         }
 
         public override void OnRequestPermissionsResult (int requestCode, string[] permissions, [GeneratedEnum] Permission[] grantResults)
@@ -78,36 +74,11 @@ namespace ZXing.Mobile
             ZXing.Net.Mobile.Android.PermissionsHandler.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
 
-        public override void OnConfigurationChanged (Android.Content.Res.Configuration newConfig)
-        {
-            base.OnConfigurationChanged (newConfig);
-
-            Android.Util.Log.Debug (MobileBarcodeScanner.TAG, "Configuration Changed");
-        }
-
-        public void SetTorch (bool on)
-        {
-            scannerFragment.Torch (on);
-        }
-
-        public void AutoFocus ()
-        {
-            scannerFragment.AutoFocus ();
-        }
-
-        public void CancelScan ()
-        {
-            Finish ();
-        }
-
         public override bool OnKeyDown (Keycode keyCode, KeyEvent e)
         {
             switch (keyCode) {
-            case Keycode.Back:
-                CancelScan ();
-                break;
-            case Keycode.Focus:
-                return true;
+                case Keycode.Focus:
+                    return true;
             }
 
             return base.OnKeyDown (keyCode, e);

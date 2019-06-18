@@ -1,7 +1,6 @@
 ﻿using System;
 using Android.Hardware;
 using ApxLabs.FastAndroidCamera;
-using ZXing.Net.Mobile.Android;
 
 namespace ZXing.Mobile.CameraAccess
 {
@@ -21,7 +20,7 @@ namespace ZXing.Mobile.CameraAccess
 
         public void OnAutoFocus(bool success, Camera camera)
         {
-            Android.Util.Log.Debug(MobileBarcodeScanner.TAG, "AutoFocus {0}", success ? "Succeeded" : "Failed");
+            System.Diagnostics.Debug.WriteLine("AutoFocus {0}", success ? "Succeeded" : "Failed");
         }
     }
 }

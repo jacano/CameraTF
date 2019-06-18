@@ -53,18 +53,15 @@
     <Compile Include="CameraAccess\CameraAnalyzer.cs" />
     <Compile Include="CameraAccess\CameraController.cs" />
     <Compile Include="CameraAccess\CameraEventsListener.cs" />
-    <Compile Include="CameraAccess\Torch.cs" />
-    <Compile Include="CameraResolution.cs" />
+    <Compile Include="CameraAccess\CameraResolution.cs" />
     <Compile Include="Helpers\MathHelper.cs" />
     <Compile Include="Helpers\YuvHelper.cs" />
     <Compile Include="IScannerView.cs" />
-    <Compile Include="MobileBarcodeScanner.cs" />
-    <Compile Include="Permissions.cs" />
-    <Compile Include="PermissionsHandler.cs" />
+    <Compile Include="Permission\Permissions.cs" />
+    <Compile Include="Permission\PermissionsHandler.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ZxingActivity.cs" />
-    <Compile Include="ZXingScannerFragment.cs" />
     <Compile Include="ZXingSurfaceView.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -98,12 +95,6 @@
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\layout\zxingscanneractivitylayout.axml">
-      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
-      <SubType>Designer</SubType>
-    </AndroidResource>
-  </ItemGroup>
-  <ItemGroup>
-    <AndroidResource Include="Resources\layout\zxingscannerfragmentlayout.axml">
       <Generator>MSBuild:UpdateGeneratedFiles</Generator>
       <SubType>Designer</SubType>
     </AndroidResource>

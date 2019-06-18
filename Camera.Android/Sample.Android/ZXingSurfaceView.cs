@@ -115,33 +115,15 @@ namespace ZXing.Mobile
             _cameraAnalyzer.ResumeAnalysis();
         }
 
-        public void Torch(bool on)
-        {
-            if (on)
-                _cameraAnalyzer.Torch.TurnOn();
-            else
-                _cameraAnalyzer.Torch.TurnOff();
-        }
-
-        public void ToggleTorch()
-        {
-            _cameraAnalyzer.Torch.Toggle();
-        }
-
-        public bool IsTorchOn => _cameraAnalyzer.Torch.IsEnabled;
-
         public bool IsAnalyzing => _cameraAnalyzer.IsAnalyzing;
 
         private CameraAnalyzer _cameraAnalyzer;
         private bool _surfaceCreated;
 
-        public bool HasTorch => _cameraAnalyzer.Torch.IsSupported;
-
 		protected override void OnAttachedToWindow()
 		{
 			base.OnAttachedToWindow();
 
-			// Reinit things
 			Init();
 		}
 

@@ -8,16 +8,14 @@ using ApxLabs.FastAndroidCamera;
 using Sample.Android.Helpers;
 using SkiaSharp;
 using TailwindTraders.Mobile.Features.Scanning;
-using ZXing.Net.Mobile.Android;
 
 namespace ZXing.Mobile.CameraAccess
 {
     public class CameraAnalyzer
     {
-        private readonly CameraController _cameraController;
-        private readonly CameraEventsListener _cameraEventListener;
-        private Task _processingTask;
-        private DateTime _lastPreviewAnalysis = DateTime.UtcNow;
+        private readonly CameraController cameraController;
+        private readonly CameraEventsListener cameraEventListener;
+        private Task processingTask;
 
         private int[] rgba;
         private IntPtr output;
@@ -32,12 +30,9 @@ namespace ZXing.Mobile.CameraAccess
 
         public CameraAnalyzer(SurfaceView surfaceView)
         {
-            _cameraEventListener = new CameraEventsListener();
-            _cameraController = new CameraController(surfaceView, _cameraEventListener);
-            Torch = new Torch(_cameraController, surfaceView.Context);
+            cameraEventListener = new CameraEventsListener();
+            cameraController = new CameraController(surfaceView, cameraEventListener);
         }
-
-        public Torch Torch { get; }
 
         public bool IsAnalyzing { get; private set; }
 
@@ -54,29 +49,29 @@ namespace ZXing.Mobile.CameraAccess
         public void ShutdownCamera()
         {
             IsAnalyzing = false;
-            _cameraEventListener.OnPreviewFrameReady -= HandleOnPreviewFrameReady;
-            _cameraController.ShutdownCamera();
+            cameraEventListener.OnPreviewFrameReady -= HandleOnPreviewFrameReady;
+            cameraController.ShutdownCamera();
         }
 
         public void SetupCamera()
         {
-            _cameraEventListener.OnPreviewFrameReady += HandleOnPreviewFrameReady;
-            _cameraController.SetupCamera();
+            cameraEventListener.OnPreviewFrameReady += HandleOnPreviewFrameReady;
+            cameraController.SetupCamera();
         }
 
         public void AutoFocus()
         {
-            _cameraController.AutoFocus();
+            cameraController.AutoFocus();
         }
 
         public void AutoFocus(int x, int y)
         {
-            _cameraController.AutoFocus(x, y);
+            cameraController.AutoFocus(x, y);
         }
 
         public void RefreshCamera()
         {
-            _cameraController.RefreshCamera();
+            cameraController.RefreshCamera();
         }
 
         private bool CanAnalyzeFrame
@@ -86,9 +81,7 @@ namespace ZXing.Mobile.CameraAccess
 				if (!IsAnalyzing)
 					return false;
 				
-                //Check and see if we're still processing a previous frame
-                // todo: check if we can run as many as possible or mby run two analyzers at once (Vision + ZXing)
-                if (_processingTask != null && !_processingTask.IsCompleted)
+                if (processingTask != null && !processingTask.IsCompleted)
                     return false;
 
 				return true;
@@ -100,9 +93,7 @@ namespace ZXing.Mobile.CameraAccess
             if (!CanAnalyzeFrame)
                 return;
 
-            _lastPreviewAnalysis = DateTime.UtcNow;
-
-			_processingTask = Task.Run(() =>
+			processingTask = Task.Run(() =>
 			{
 				try
 				{
@@ -113,7 +104,7 @@ namespace ZXing.Mobile.CameraAccess
 			}).ContinueWith(task =>
             {
                 if (task.IsFaulted)
-                    Android.Util.Log.Debug(MobileBarcodeScanner.TAG, "DecodeFrame exception occurs");
+                    Debug.WriteLine("DecodeFrame exception occurs");
             }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
@@ -121,11 +112,11 @@ namespace ZXing.Mobile.CameraAccess
         {
             if (rgba == null)
             {
-                var cameraParameters = _cameraController.Camera.GetParameters();
+                var cameraParameters = cameraController.Camera.GetParameters();
                 width = cameraParameters.PreviewSize.Width;
                 height = cameraParameters.PreviewSize.Height;
 
-                cDegrees = _cameraController.LastCameraDisplayOrientationDegree;
+                cDegrees = cameraController.LastCameraDisplayOrientationDegree;
 
                 rgbaCount = width * height;
                 rgba = new int[rgbaCount];
@@ -133,7 +124,7 @@ namespace ZXing.Mobile.CameraAccess
                 var rgbGCHandle = GCHandle.Alloc(rgba, GCHandleType.Pinned);
                 output = rgbGCHandle.AddrOfPinnedObject();
 
-                var inputInfo = new SKImageInfo(width, height, SkiaSharp.SKColorType.Rgba8888);
+                var inputInfo = new SKImageInfo(width, height, SKColorType.Rgba8888);
                 skiaRGB = new SKBitmap(inputInfo);
 
                 var outputInfo = new SKImageInfo(TensorflowLiteService.ModelInputSize, TensorflowLiteService.ModelInputSize, SKColorType.Rgba8888);
