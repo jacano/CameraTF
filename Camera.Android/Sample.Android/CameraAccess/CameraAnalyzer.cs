@@ -1,10 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using Android.Graphics;
 using Android.Views;
 using ApxLabs.FastAndroidCamera;
-using TailwindTraders.Mobile.Droid.ThirdParties.Camera;
+using Sample.Android.Helpers;
+using SkiaSharp;
 using ZXing.Net.Mobile.Android;
 
 namespace ZXing.Mobile.CameraAccess
@@ -16,15 +17,21 @@ namespace ZXing.Mobile.CameraAccess
         private Task _processingTask;
         private DateTime _lastPreviewAnalysis = DateTime.UtcNow;
 
-        //private int[] colorArray;
+        private int[] rgb;
+        private IntPtr output;
+        private SKBitmap skiaRGB;
+        private SKBitmap skiaScaledRGB;
+        private SKBitmap skiaRotatedRGB;
+
+        private int width;
+        private int height;
+        private int cDegrees;
 
         public CameraAnalyzer(SurfaceView surfaceView)
         {
             _cameraEventListener = new CameraEventsListener();
             _cameraController = new CameraController(surfaceView, _cameraEventListener);
             Torch = new Torch(_cameraController, surfaceView.Context);
-
-            //colorArray = new int[300 * 300];
         }
 
         public Torch Torch { get; }
@@ -107,105 +114,66 @@ namespace ZXing.Mobile.CameraAccess
             }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
-        private void DecodeFrame(FastJavaByteArray fastArray)
+        private unsafe void DecodeFrame(FastJavaByteArray fastArray)
         {
-            var cameraParameters = _cameraController.Camera.GetParameters();
-            var width = cameraParameters.PreviewSize.Width;
-            var height = cameraParameters.PreviewSize.Height;
+            if (rgb == null)
+            {
+                var cameraParameters = _cameraController.Camera.GetParameters();
+                width = cameraParameters.PreviewSize.Width;
+                height = cameraParameters.PreviewSize.Height;
 
-            // use last value for performance gain
-            var cDegrees = _cameraController.LastCameraDisplayOrientationDegree;
+                cDegrees = _cameraController.LastCameraDisplayOrientationDegree;
+
+                rgb = new int[width * height];
+
+                var rgbGCHandle = GCHandle.Alloc(rgb, GCHandleType.Pinned);
+                output = rgbGCHandle.AddrOfPinnedObject();
+
+                skiaRGB = new SKBitmap(new SKImageInfo(width, height, SkiaSharp.SKColorType.Rgba8888));
+                skiaScaledRGB = new SKBitmap(new SKImageInfo(300, 300, SkiaSharp.SKColorType.Rgba8888));
+                skiaRotatedRGB = new SKBitmap(new SKImageInfo(300, 300, SkiaSharp.SKColorType.Rgba8888));
+            }
 
             var start = PerformanceCounter.Start();
 
+            var pY = fastArray.Raw;
+            var pUV = pY + width * height;
+            
+            YuvHelper.ConvertYUV420SPToARGB8888(pY, pUV, (int*)output, width, height);
 
-            //YuvImage yuv = new YuvImage(data, parameters.getPreviewFormat(), width, height, null);
+            skiaRGB.InstallPixels(skiaRGB.Info, output);
 
-            //ByteArrayOutputStream out = new ByteArrayOutputStream();
-            //yuv.compressToJpeg(new Rect(0, 0, width, height), 50, out);
+            skiaRGB.ScalePixels(skiaScaledRGB, SKFilterQuality.None);
 
-            //byte[] bytes = out.toByteArray();
-            //final Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+            RotateBitmap(skiaScaledRGB, cDegrees);
 
-
-            //var byteBuffer = Java.Nio.ByteBuffer.Wrap(fastArray.Handle);
-
-            //var rawImg = new byte[fastArray.Count];
-
-            //fastArray.CopyTo(rawImg, fastArray.Count);
-
-            //var decodeOpt = new BitmapFactory.Options()
-            //{
-            //    InSampleSize = CalculateInSampleSize(width, height, 300, 300)
-            //};
-
-            //using (var resizedBitmap = BitmapFactory.DecodeByteArray(rawImg, 0, rawImg.Length, decodeOpt))
-            //{
-            //    using (var rotatedImage = RotateImage(resizedBitmap, cDegrees))
-            //    {
-            //        CopyColors(rotatedImage);
-
-            //        //ZxingActivity.tfService.Recognize(colorArray);
-            //    }
-            //}
+            //SaveSkiaImg(skiaRotatedRGB);
 
             PerformanceCounter.Stop(start,
-                    "Decode Time: {0} ms (width: " + width + ", height: " + height + ", degrees: " + cDegrees + ")");
+                "Decode Time: {0} ms (width: " + width + ", height: " + height + ", degrees: " + cDegrees + ")");
         }
 
-        //private void SaveImg(Bitmap img)
-        //{
-        //    var path = Android.OS.Environment.ExternalStorageDirectory.AbsolutePath;
-        //    var filePath = System.IO.Path.Combine(path, "test.png");
+        private void SaveSkiaImg(SKBitmap img)
+        {
+            var path = Android.OS.Environment.ExternalStorageDirectory.AbsolutePath;
+            var filePath = System.IO.Path.Combine(path, "test-skia.png");
 
-        //    using (var stream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
-        //    {
-        //        img.Compress(Bitmap.CompressFormat.Png, 100, stream);
-        //    }
-        //}
+            using (var stream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
+            {
+                SKData d = SKImage.FromBitmap(img).Encode(SKEncodedImageFormat.Png, 100);
+                d.SaveTo(stream);
+            }
+        }
 
-        //private int CalculateInSampleSize(int currentWidth, int currentHeight, int reqWidth, int reqHeight)
-        //{
-        //    // Raw height and width of image
-        //    float height = currentHeight;
-        //    float width = currentWidth;
-        //    double inSampleSize = 1D;
-
-        //    if (height > reqHeight || width > reqWidth)
-        //    {
-        //        int halfHeight = (int)(height / 2);
-        //        int halfWidth = (int)(width / 2);
-
-        //        // Calculate a inSampleSize that is a power of 2 - the decoder will use a value that is a power of two anyway.
-        //        while ((halfHeight / inSampleSize) > reqHeight && (halfWidth / inSampleSize) > reqWidth)
-        //        {
-        //            inSampleSize *= 2;
-        //        }
-        //    }
-
-        //    return (int)inSampleSize;
-        //}
-
-        //private Bitmap RotateImage(Bitmap image, int orientation)
-        //{
-        //    var matrix = new Matrix();
-        //    matrix.PostRotate(orientation);
-
-        //    var rotatedImage = Bitmap.CreateBitmap(image, 0, 0, image.Width, image.Height, matrix, true);
-        //    return rotatedImage;
-        //}
-
-        //private void CopyColors(Bitmap bmp)
-        //{
-        //    bmp.GetPixels(colorArray, 0, bmp.Width, 0, 0, bmp.Width, bmp.Height);
-
-        //    for (int i = 0; i < colorArray.Length; i++)
-        //    {
-        //        var color = new ColorUnion((uint)colorArray[i]);
-        //        var swappedColor = new ColorUnion(color.B, color.G, color.R, color.A);
-
-        //        colorArray[i] = (int)swappedColor.Value;
-        //    }
-        //}
+        void RotateBitmap(SKBitmap bitmap, int degrees)
+        {
+            using (var surface = new SKCanvas(skiaRotatedRGB))
+            {
+                surface.Translate(skiaRotatedRGB.Width / 2, skiaRotatedRGB.Height / 2);
+                surface.RotateDegrees(degrees);
+                surface.Translate(-skiaRotatedRGB.Width / 2, -skiaRotatedRGB.Height / 2);
+                surface.DrawBitmap(bitmap, 0, 0);
+            }
+        }
     }
 }
