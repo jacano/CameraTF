@@ -96,7 +96,7 @@ namespace CameraTF
                canvas,
                5,
                canvasHeight - 100,
-               $"TFlite Model eval: {detection.InferenceElapsedMs} ms");
+               $"TF interpreter invoke: {detection.InterpreterElapsedMs} ms");
 
             var cameraStats = lastCameraStatsMessage;
             var processingStats = lastProcessingStatsMessage;

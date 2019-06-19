@@ -83,7 +83,7 @@ namespace CameraTF
 
             var detectionMessage = new DetectionMessage()
             {
-                InferenceElapsedMs = stopwatch.ElapsedMilliseconds,
+                InterpreterElapsedMs = stopwatch.ElapsedMilliseconds,
                 NumDetections = numDetections,
                 Labels = detection_classes_out,
                 Scores = detection_scores_out,

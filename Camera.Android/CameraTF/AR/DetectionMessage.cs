@@ -2,7 +2,7 @@
 {
     public class DetectionMessage
     {
-        public long InferenceElapsedMs { get; set; }
+        public long InterpreterElapsedMs { get; set; }
         public int NumDetections { get; set; }
 
         public float[] Labels { get; set; }
