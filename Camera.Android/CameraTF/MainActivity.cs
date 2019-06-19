@@ -15,7 +15,10 @@ using System.Linq;
 
 namespace CameraTF
 {
-    [Activity (MainLauncher = true, Theme = "@style/AppTheme.NoActionBar", ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.KeyboardHidden | ConfigChanges.ScreenLayout)]
+    [Activity (
+        MainLauncher = true, 
+        Theme = "@style/AppTheme.NoActionBar", 
+        ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.KeyboardHidden | ConfigChanges.ScreenLayout)]
     public class MainActivity : AppCompatActivity
     {
         public static readonly string[] RequiredPermissions = new[] {
@@ -142,15 +145,18 @@ namespace CameraTF
             lastDetectionMessage = null;
         }
 
-        protected override void OnResume ()
+        protected async override void OnResume ()
         {
             base.OnResume ();
 
             if (PermissionsHandler.NeedsPermissionRequest(this))
-                PermissionsHandler.RequestPermissionsAsync(this);
+                await PermissionsHandler.RequestPermissionsAsync(this);
         }
 
-        public override void OnRequestPermissionsResult (int requestCode, string[] permissions, [GeneratedEnum] Permission[] grantResults)
+        public override void OnRequestPermissionsResult (
+            int requestCode, 
+            string[] permissions,
+            [GeneratedEnum] Permission[] grantResults)
         { 
             PermissionsHandler.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }

@@ -44,7 +44,10 @@ namespace CameraTF.CameraAccess
 
             InitTensorflowLineService();
 
-            var outputInfo = new SKImageInfo(TensorflowLiteService.ModelInputSize, TensorflowLiteService.ModelInputSize, SKColorType.Rgba8888);
+            var outputInfo = new SKImageInfo(
+                TensorflowLiteService.ModelInputSize, 
+                TensorflowLiteService.ModelInputSize, 
+                SKColorType.Rgba8888);
             inputScaled = new SKBitmap(outputInfo);
             inputScaledRotated = new SKBitmap(outputInfo);
 

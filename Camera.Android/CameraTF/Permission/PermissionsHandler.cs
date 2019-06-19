@@ -146,7 +146,8 @@ namespace CameraTF
 
                 if (throwOnError)
                 {
-                    var msg = "CameraTF requires: " + permission + ", but was not found in your AndroidManifest.xml file.";
+                    var msg = "CameraTF requires: " + permission + ", but was not found in your AndroidManifest.xml" +
+                        " file.";
                     System.Diagnostics.Debug.WriteLine(msg);
 
                     throw new UnauthorizedAccessException(msg);
