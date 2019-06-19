@@ -12,14 +12,19 @@ namespace CameraTF.Helpers
             IsAntialias = true,
         };
 
-        private static readonly SKSize boundingBoxCornerRadius = new SKSize(23, 23);
-
-        private static readonly SKPaint statsPaint = new SKPaint
+        private static readonly SKPaint textPaint = new SKPaint
         {
             Color = SKColors.Black,
             IsAntialias = true,
             Style = SKPaintStyle.Fill,
             TextSize = 40,
+        };
+
+        private static readonly SKPaint backgroundPaint = new SKPaint
+        {
+            Color = new SKColor(0xFF, 0xFF, 0xFF, 0x50),
+            IsAntialias = true,
+            Style = SKPaintStyle.Fill,
         };
 
         public static void DrawBoundingBox(
@@ -29,24 +34,14 @@ namespace CameraTF.Helpers
             float xmin,
             float ymin,
             float xmax,
-            float ymax,
-            float score,
-            string label)
+            float ymax)
         {
             var top = xmin * height;
             var left = ymin * width;
             var bottom = xmax * height;
             var right = ymax * width;
 
-            var rect = new SKRect(left, top, right, bottom);
-
-            canvas.DrawRoundRect(rect, boundingBoxCornerRadius, boundingBoxPaint);
-
-            canvas.DrawText(
-                $"{label} - {score}",
-                left,
-                bottom,
-                statsPaint);
+            canvas.DrawRoundRect(new SKRect(left, top, right, bottom), new SKSize(23, 23), boundingBoxPaint);
         }
 
         public static void DrawText(
@@ -59,7 +54,22 @@ namespace CameraTF.Helpers
                 text,
                 x,
                 y,
-                statsPaint);
+                textPaint);
+        }
+
+        public static void DrawBackgroundRectangle(
+           SKCanvas canvas,
+           float width,
+           float height,
+           float x,
+           float y)
+        {
+            canvas.DrawRect(
+                x,
+                y,
+                width,
+                height,
+                backgroundPaint);
         }
     }
 }

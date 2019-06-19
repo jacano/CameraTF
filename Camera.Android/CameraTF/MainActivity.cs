@@ -95,10 +95,20 @@ namespace CameraTF
 
             canvas.Clear();
 
+            var leftMargin = 5;
+
+            var recHeight = 150;
+            DrawingHelper.DrawBackgroundRectangle(
+                canvas,
+                canvasWidth,
+                recHeight,
+                0,
+                canvasHeight - recHeight);
+
             DrawingHelper.DrawText(
                canvas,
-               5,
-               canvasHeight - 100,
+               leftMargin,
+               canvasHeight - 105,
                $"TF interpreter invoke: {detection.InterpreterElapsedMs} ms");
 
             var cameraStats = lastCameraStatsMessage;
@@ -107,13 +117,13 @@ namespace CameraTF
             {
                 DrawingHelper.DrawText(
                     canvas,
-                    5,
-                    canvasHeight - 50,
+                    leftMargin,
+                    canvasHeight - 55,
                     $"Processing FPS: {processingStats.Fps} fps ({processingStats.Ms} ms)");
 
                 DrawingHelper.DrawText(
                     canvas,
-                    5,
+                    leftMargin,
                     canvasHeight - 5,
                     $"Camera FPS: {cameraStats.Fps} fps ({cameraStats.Ms} ms)");
             }
@@ -137,9 +147,12 @@ namespace CameraTF
                     xmin,
                     ymin,
                     xmax,
-                    ymax,
-                    score,
-                    labels[labelIndex + LabelOffset]);
+                    ymax);
+
+                var left = ymin * canvasWidth;
+                var bottom = xmax * canvasHeight;
+                var label = labels[labelIndex + LabelOffset];
+                DrawingHelper.DrawText(canvas, left, bottom, $"{label} - {score}");
             }
 
             lastDetectionMessage = null;
