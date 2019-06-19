@@ -15,6 +15,8 @@ namespace CameraTF.CameraAccess
 {
     public class CameraAnalyzer
     {
+        private const string Model = "hardhat_detect.tflite";
+
         private readonly CameraController cameraController;
         private readonly CameraEventsListener cameraEventListener;
         private Task processingTask;
@@ -46,8 +48,13 @@ namespace CameraTF.CameraAccess
             inputScaled = new SKBitmap(outputInfo);
             inputScaledRotated = new SKBitmap(outputInfo);
 
-            cameraFPSCounter = new FPSCounter((x) => Debug.WriteLine($"Camera: {x.fps} fps ({x.ms} ms)"));
-            processingFPSCounter = new FPSCounter((x) => this.Publish(new StatsMessage()
+            cameraFPSCounter = new FPSCounter((x) => this.Publish(new CameraStatsMessage()
+            {
+                Fps = x.fps,
+                Ms = x.ms,
+            }));
+
+            processingFPSCounter = new FPSCounter((x) => this.Publish(new ProcessingStatsMessage()
             {
                 Fps = x.fps,
                 Ms = x.ms,
@@ -149,8 +156,7 @@ namespace CameraTF.CameraAccess
 
         private void InitTensorflowLineService()
         {
-            var model = "hardhat_detect.tflite";
-            using (var modelData = Application.Context.Assets.Open(model))
+            using (var modelData = Application.Context.Assets.Open(Model))
             {
                 tfService = new TensorflowLiteService();
                 tfService.Initialize(modelData, useNumThreads: true);
@@ -160,7 +166,7 @@ namespace CameraTF.CameraAccess
         private void SaveSkiaImg(SKBitmap img)
         {
             var path = Android.OS.Environment.ExternalStorageDirectory.AbsolutePath;
-            var filePath = Path.Combine(path, "test-skia.png");
+            var filePath = Path.Combine(path, "test_skia.png");
 
             using (var stream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
             {

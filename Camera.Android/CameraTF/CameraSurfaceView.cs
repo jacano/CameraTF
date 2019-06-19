@@ -89,10 +89,9 @@ namespace CameraTF
             base.OnWindowFocusChanged(hasWindowFocus);
 
             if (!hasWindowFocus) return;
-            // SurfaceCreated/SurfaceChanged are not called on a resume
+
             await PermissionsHandler.PermissionRequestTask;
 
-            //only refresh the camera if the surface has already been created. Fixed #569
             if (surfaceCreated)
             {
                 cameraAnalyzer.RefreshCamera();

@@ -26,12 +26,13 @@ namespace CameraTF
 
         private const float MinScore = 0.6f;
         private const int LabelOffset = 1;
+        private const string LabelsFilename = "hardhat_labels_list.txt";
 
         private string[] labels;
 
         private DetectionMessage lastDetectionMessage;
-        private StatsMessage lastStatsMessage;
-        private SKCanvasView canvasView;
+        private StatsMessage lastCameraStatsMessage;
+        private ProcessingStatsMessage lastProcessingStatsMessage;
 
         protected override void OnCreate (Bundle bundle)
         {
@@ -46,22 +47,18 @@ namespace CameraTF
 
             LoadModelLabels();
 
-            this.Subscribe<StatsMessage>((d) =>
-            {
-                lastStatsMessage = d;
-            });
+            var cameraSurface = new CameraSurfaceView(this);
+            var canvasView = new SKCanvasView(this);
+            canvasView.PaintSurface += Canvas_PaintSurface;
 
+            this.Subscribe<CameraStatsMessage>((d) => lastCameraStatsMessage = d);
+            this.Subscribe<ProcessingStatsMessage>((d) => lastProcessingStatsMessage = d);
             this.Subscribe<DetectionMessage>((d) =>
             {
                 lastDetectionMessage = d;
 
-                this.canvasView.Invalidate();
+                canvasView.Invalidate();
             });
-
-            this.canvasView = new SKCanvasView(this);
-            var cameraSurface = new CameraSurfaceView(this);
-
-            canvasView.PaintSurface += Canvas_PaintSurface;
 
             var mainView = this.FindViewById<FrameLayout>(Resource.Id.frameLayout1);
             mainView.AddView(cameraSurface);
@@ -70,8 +67,7 @@ namespace CameraTF
 
         private void LoadModelLabels()
         {
-            var labelsFilename = "hardhat_labels_list.txt";
-            using (var labelData = Application.Context.Assets.Open(labelsFilename))
+            using (var labelData = Application.Context.Assets.Open(LabelsFilename))
             {
                 using (var reader = new StreamReader(labelData))
                 {
@@ -99,17 +95,24 @@ namespace CameraTF
             DrawingHelper.DrawText(
                canvas,
                5,
-               canvasHeight - 50,
-               $"TF Model eval: {detection.InferenceElapsedMs} ms");
+               canvasHeight - 100,
+               $"TFlite Model eval: {detection.InferenceElapsedMs} ms");
 
-            var stats = lastStatsMessage;
-            if (stats != null)
+            var cameraStats = lastCameraStatsMessage;
+            var processingStats = lastProcessingStatsMessage;
+            if (cameraStats != null && processingStats != null)
             {
                 DrawingHelper.DrawText(
                     canvas,
                     5,
+                    canvasHeight - 50,
+                    $"Processing FPS: {processingStats.Fps} fps ({processingStats.Ms} ms)");
+
+                DrawingHelper.DrawText(
+                    canvas,
+                    5,
                     canvasHeight - 5,
-                    $"Processing FPS: {stats.Fps} fps ({stats.Ms} ms)");
+                    $"Camera FPS: {cameraStats.Fps} fps ({cameraStats.Ms} ms)");
             }
 
             for (var i = 0; i < detection.NumDetections; i++)
