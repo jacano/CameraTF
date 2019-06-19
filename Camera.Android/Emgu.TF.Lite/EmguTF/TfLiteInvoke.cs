@@ -22,7 +22,7 @@ namespace Emgu.TF.Lite
             throw new Exception();
         }
 
-        public static readonly TfliteErrorCallback 
+        public static readonly TfliteErrorCallback
             TfliteErrorHandlerThrowException = TfliteErrorHandler;
 
         private const string XamarinIOSObjectClassName = "Foundation.NSObject, Xamarin.iOS";
@@ -38,7 +38,7 @@ namespace Emgu.TF.Lite
                 TfeFlatBufferModelBuildFromBuffer = TfLiteDllImportXamarinIOS.tfeFlatBufferModelBuildFromBuffer;
                 TfeFlatBufferModelRelease = TfLiteDllImportXamarinIOS.tfeFlatBufferModelRelease;
                 TfeFlatBufferModelInitialized = TfLiteDllImportXamarinIOS.tfeFlatBufferModelInitialized;
-                TfeFlatBufferModelCheckModelIdentifier = 
+                TfeFlatBufferModelCheckModelIdentifier =
                     TfLiteDllImportXamarinIOS.tfeFlatBufferModelCheckModelIdentifier;
                 TfeMemcpy = TfLiteDllImportXamarinIOS.tfeMemcpy;
                 TfeInterpreterCreate = TfLiteDllImportXamarinIOS.tfeInterpreterCreate;
@@ -73,7 +73,7 @@ namespace Emgu.TF.Lite
                 TfeFlatBufferModelBuildFromBuffer = TfLiteDllImport.tfeFlatBufferModelBuildFromBuffer;
                 TfeFlatBufferModelRelease = TfLiteDllImport.tfeFlatBufferModelRelease;
                 TfeFlatBufferModelInitialized = TfLiteDllImport.tfeFlatBufferModelInitialized;
-                TfeFlatBufferModelCheckModelIdentifier = 
+                TfeFlatBufferModelCheckModelIdentifier =
                     TfLiteDllImport.tfeFlatBufferModelCheckModelIdentifier;
                 TfeMemcpy = TfLiteDllImport.tfeMemcpy;
                 TfeInterpreterCreate = TfLiteDllImport.tfeInterpreterCreate;
@@ -106,7 +106,7 @@ namespace Emgu.TF.Lite
         public static readonly TfLiteDelegates.tfeFlatBufferModelBuildFromBuffer TfeFlatBufferModelBuildFromBuffer;
         public static readonly TfLiteDelegates.tfeFlatBufferModelRelease TfeFlatBufferModelRelease;
         public static readonly TfLiteDelegates.tfeFlatBufferModelInitialized TfeFlatBufferModelInitialized;
-        public static readonly TfLiteDelegates.tfeFlatBufferModelCheckModelIdentifier 
+        public static readonly TfLiteDelegates.tfeFlatBufferModelCheckModelIdentifier
             TfeFlatBufferModelCheckModelIdentifier;
 
         public static readonly TfLiteDelegates.tfeMemcpy TfeMemcpy;

@@ -15,7 +15,7 @@ namespace Emgu.TF.Lite
         internal static extern void RedirectError(TfLiteInvoke.TfliteErrorCallback errorHandler);
 
         [DllImport(ExternLibrary, CallingConvention = Constants.TFCallingConvention)]
-        internal static extern IntPtr 
+        internal static extern IntPtr
             tfeFlatBufferModelBuildFromFile([MarshalAs(Constants.StringMarshalType)] string filename);
 
         [DllImport(ExternLibrary, CallingConvention = Constants.TFCallingConvention)]

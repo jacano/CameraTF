@@ -16,7 +16,7 @@ namespace Emgu.TF.Lite
     public class BuildinOpResolver : Emgu.TF.Util.UnmanagedObject, IOpResolver
     {
         private IntPtr opResolverPtr;
-        
+
         /// <summary>
         /// Create a default buildin op resolver.
         /// </summary>
@@ -24,7 +24,7 @@ namespace Emgu.TF.Lite
         {
             ptr = TfLiteInvoke.TfeBuiltinOpResolverCreate(ref opResolverPtr);
         }
-        
+
         IntPtr IOpResolver.OpResolverPtr
         {
             get
