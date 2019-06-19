@@ -14,12 +14,13 @@ namespace CameraTF
         private byte[] quantizedColors;
         private FlatBufferModel model;
 
-        private bool useNumThreads;
+        private Interpreter interpreter;
+
+        private Tensor inputTensor;
+        private Tensor[] outputTensors;
 
         public bool Initialize(Stream modelData, bool useNumThreads)
         {
-            this.useNumThreads = useNumThreads;
-
             using (var ms = new MemoryStream())
             {
                 modelData.CopyTo(ms);
@@ -34,28 +35,13 @@ namespace CameraTF
                 return false;
             }
 
-            return true;
-        }
+            var op = new BuildinOpResolver();
+            interpreter = new Interpreter(model, op);
 
-        public bool Recognize(int* colors, int colorsCount)
-        {
-            using (var op = new BuildinOpResolver())
+            if (useNumThreads)
             {
-                using (var interpreter = new Interpreter(model, op))
-                {
-                    if (useNumThreads)
-                    {
-                        interpreter.SetNumThreads(Environment.ProcessorCount);
-                    }
-
-                    return InvokeInterpreter(interpreter, colors, colorsCount);
-                }
+                interpreter.SetNumThreads(Environment.ProcessorCount);
             }
-        }
-
-        private bool InvokeInterpreter(Interpreter interpreter, int* colors, int colorsCount)
-        {
-            var stopwatch = new Stopwatch();
 
             var allocateTensorStatus = interpreter.AllocateTensors();
             if (allocateTensorStatus == Status.Error)
@@ -64,23 +50,29 @@ namespace CameraTF
             }
 
             var input = interpreter.GetInput();
-            using (var inputTensor = interpreter.GetTensor(input[0]))
-            {
-                CopyColorsToTensor(inputTensor.DataPointer, colors, colorsCount);
-
-                stopwatch.Start();
-                interpreter.Invoke();
-                stopwatch.Stop();
-            }
+            inputTensor = interpreter.GetTensor(input[0]);
 
             var output = interpreter.GetOutput();
             var outputIndex = output[0];
 
-            var outputTensors = new Tensor[output.Length];
+            outputTensors = new Tensor[output.Length];
             for (var i = 0; i < output.Length; i++)
             {
                 outputTensors[i] = interpreter.GetTensor(outputIndex + i);
             }
+
+            return true;
+        }
+
+        public bool Recognize(int* colors, int colorsCount)
+        {
+            CopyColorsToTensor(inputTensor.DataPointer, colors, colorsCount);
+
+            var stopwatch = new Stopwatch();
+
+            stopwatch.Start();
+            interpreter.Invoke();
+            stopwatch.Stop();
 
             var detection_boxes_out = (float[])outputTensors[0].GetData();
             var detection_classes_out = (float[])outputTensors[1].GetData();
