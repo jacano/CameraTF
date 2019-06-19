@@ -140,17 +140,18 @@ namespace CameraTF
                 if (!labelIndex.Between(0, labels.Length - 1)) continue;
                 if (score < MinScore) continue;
 
+                var left = ymin * canvasWidth;
+                var top = xmin * canvasHeight;
+                var right = ymax * canvasWidth;
+                var bottom = xmax * canvasHeight;
+
                 DrawingHelper.DrawBoundingBox(
                     canvas,
-                    canvasWidth,
-                    canvasHeight,
-                    xmin,
-                    ymin,
-                    xmax,
-                    ymax);
+                    left,
+                    top,
+                    right,
+                    bottom);
 
-                var left = ymin * canvasWidth;
-                var bottom = xmax * canvasHeight;
                 var label = labels[labelIndex + LabelOffset];
                 DrawingHelper.DrawText(canvas, left, bottom, $"{label} - {score}");
             }

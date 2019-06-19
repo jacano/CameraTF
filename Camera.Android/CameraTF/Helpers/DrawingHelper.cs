@@ -29,18 +29,11 @@ namespace CameraTF.Helpers
 
         public static void DrawBoundingBox(
             SKCanvas canvas,
-            float width,
-            float height,
-            float xmin,
-            float ymin,
-            float xmax,
-            float ymax)
+            float left,
+            float top,
+            float right,
+            float bottom)
         {
-            var top = xmin * height;
-            var left = ymin * width;
-            var bottom = xmax * height;
-            var right = ymax * width;
-
             canvas.DrawRoundRect(new SKRect(left, top, right, bottom), new SKSize(23, 23), boundingBoxPaint);
         }
 
