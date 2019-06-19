@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Android.App;
 using Android.Views;
 using ApxLabs.FastAndroidCamera;
+using CameraTF.Helpers;
 using SkiaSharp;
 
 namespace CameraTF.CameraAccess
@@ -23,12 +24,14 @@ namespace CameraTF.CameraAccess
         private SKBitmap input;
         private SKBitmap inputScaled;
         private SKBitmap inputScaledRotated;
-
         private int[] imageData;
         private GCHandle imageGCHandle;
         private IntPtr imageIntPtr;
 
         private TensorflowLiteService tfService;
+
+        private FPSCounter cameraFPSCounter;
+        private FPSCounter processingFPSCounter;
 
         public CameraAnalyzer(SurfaceView surfaceView)
         {
@@ -36,6 +39,13 @@ namespace CameraTF.CameraAccess
             cameraController = new CameraController(surfaceView, cameraEventListener);
 
             InitTensorflowLineService();
+
+            var outputInfo = new SKImageInfo(TensorflowLiteService.ModelInputSize, TensorflowLiteService.ModelInputSize, SKColorType.Rgba8888);
+            inputScaled = new SKBitmap(outputInfo);
+            inputScaledRotated = new SKBitmap(outputInfo);
+
+            cameraFPSCounter = new FPSCounter((x) => Debug.WriteLine($"Camera: {x}"));
+            processingFPSCounter = new FPSCounter((x) => Debug.WriteLine($"Processing: {x}"));
         }
 
         public void SetupCamera()
@@ -62,12 +72,16 @@ namespace CameraTF.CameraAccess
 
         private void HandleOnPreviewFrameReady(object sender, FastJavaByteArray fastArray)
         {
+            cameraFPSCounter.Report();
+
             if (!CanAnalyzeFrame)
                 return;
 
 			processingTask = Task.Run(() =>
 			{
-				try
+                processingFPSCounter.Report();
+
+                try
 				{
 					DecodeFrame(fastArray);
 				} catch (Exception ex) {
@@ -93,10 +107,6 @@ namespace CameraTF.CameraAccess
                 imageIntPtr = imageGCHandle.AddrOfPinnedObject();
 
                 input = new SKBitmap(new SKImageInfo(width, height, SKColorType.Rgba8888));
-
-                var outputInfo = new SKImageInfo(TensorflowLiteService.ModelInputSize, TensorflowLiteService.ModelInputSize, SKColorType.Rgba8888);
-                inputScaled = new SKBitmap(outputInfo);
-                inputScaledRotated = new SKBitmap(outputInfo);
             }
 
             var pY = fastArray.Raw;

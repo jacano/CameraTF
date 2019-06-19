@@ -62,6 +62,7 @@
     <Compile Include="CameraAccess\CameraEventsListener.cs" />
     <Compile Include="CameraAccess\CameraResolution.cs" />
     <Compile Include="Helpers\DrawingHelper.cs" />
+    <Compile Include="Helpers\FPSCounter.cs" />
     <Compile Include="Helpers\MathHelper.cs" />
     <Compile Include="Helpers\YuvHelper.cs" />
     <Compile Include="Permission\Permissions.cs" />
