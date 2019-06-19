@@ -53,9 +53,21 @@ namespace CameraTF
             cameraAnalyzer.RefreshCamera();
         }
 
-        public void SurfaceDestroyed(ISurfaceHolder holder)
+        public async void SurfaceDestroyed(ISurfaceHolder holder)
         {
+            await PermissionsHandler.PermissionRequestTask;
 
+            try
+            {
+                if (addedHolderCallback)
+                {
+                    Holder.RemoveCallback(this);
+                    addedHolderCallback = false;
+                }
+            }
+            catch { }
+
+            cameraAnalyzer.ShutdownCamera();
         }
 
 		protected override void OnAttachedToWindow()
@@ -75,14 +87,16 @@ namespace CameraTF
         public override async void OnWindowFocusChanged(bool hasWindowFocus)
         {
             base.OnWindowFocusChanged(hasWindowFocus);
-            
+
             if (!hasWindowFocus) return;
             // SurfaceCreated/SurfaceChanged are not called on a resume
             await PermissionsHandler.PermissionRequestTask;
 
             //only refresh the camera if the surface has already been created. Fixed #569
             if (surfaceCreated)
+            {
                 cameraAnalyzer.RefreshCamera();
+            }
         }
     }
 }

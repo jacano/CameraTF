@@ -59,6 +59,11 @@ namespace CameraTF.CameraAccess
             cameraController.RefreshCamera();
         }
 
+        public void ShutdownCamera()
+        {
+            cameraController.ShutdownCamera();
+        }
+
         private bool CanAnalyzeFrame
         {
             get

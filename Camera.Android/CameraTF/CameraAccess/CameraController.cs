@@ -52,6 +52,34 @@ namespace CameraTF.CameraAccess
             }
         }
 
+        public void ShutdownCamera()
+        {
+            if (camera == null) return;
+
+            try
+            {
+                try
+                {
+                    camera.StopPreview();
+                    camera.SetNonMarshalingPreviewCallback(null);
+
+                    camera.SetPreviewDisplay(null);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
+                }
+
+                camera.Release();
+                camera = null;
+            }
+            catch (Exception e)
+            {
+                System.Diagnostics.Debug.WriteLine(e.ToString());
+            }
+
+        }
+
         public void SetupCamera()
         {
             if (camera != null) return;
