@@ -30,6 +30,7 @@ namespace CameraTF
         private string[] labels;
 
         private DetectionMessage lastDetectionMessage;
+        private StatsMessage lastStatsMessage;
         private SKCanvasView canvasView;
 
         protected override void OnCreate (Bundle bundle)
@@ -44,6 +45,11 @@ namespace CameraTF
             SetContentView(Resource.Layout.activitylayout);
 
             LoadModelLabels();
+
+            this.Subscribe<StatsMessage>((d) =>
+            {
+                lastStatsMessage = d;
+            });
 
             this.Subscribe<DetectionMessage>((d) =>
             {
@@ -85,19 +91,35 @@ namespace CameraTF
             var canvasWidth = e.Info.Width;
             var canvasHeight = e.Info.Height;
 
-            var d = lastDetectionMessage;
-            if (d == null) return;
+            var detection = lastDetectionMessage;
+            if (detection == null) return;
 
             canvas.Clear();
 
-            for (var i = 0; i < d.NumDetections; i++)
+            DrawingHelper.DrawText(
+               canvas,
+               5,
+               canvasHeight - 50,
+               $"TF Model eval: {detection.InferenceElapsedMs} ms");
+
+            var stats = lastStatsMessage;
+            if (stats != null)
             {
-                var score = d.Scores[i];
-                var labelIndex = (int)d.Labels[i];
-                var xmin = d.BoundingBoxes[i * 4 + 0];
-                var ymin = d.BoundingBoxes[i * 4 + 1];
-                var xmax = d.BoundingBoxes[i * 4 + 2];
-                var ymax = d.BoundingBoxes[i * 4 + 3];
+                DrawingHelper.DrawText(
+                    canvas,
+                    5,
+                    canvasHeight - 5,
+                    $"Processing FPS: {stats.Fps} fps ({stats.Ms} ms)");
+            }
+
+            for (var i = 0; i < detection.NumDetections; i++)
+            {
+                var score = detection.Scores[i];
+                var labelIndex = (int)detection.Labels[i];
+                var xmin = detection.BoundingBoxes[i * 4 + 0];
+                var ymin = detection.BoundingBoxes[i * 4 + 1];
+                var xmax = detection.BoundingBoxes[i * 4 + 2];
+                var ymax = detection.BoundingBoxes[i * 4 + 3];
 
                 if (!labelIndex.Between(0, labels.Length - 1)) continue;
                 if (score < MinScore) continue;
@@ -113,12 +135,6 @@ namespace CameraTF
                     score,
                     labels[labelIndex + LabelOffset]);
             }
-
-            DrawingHelper.DrawStats(
-                canvas,
-                5,
-                canvasHeight - 3,
-                $"TF Model eval: {d.InferenceElapsedMs} ms");
 
             lastDetectionMessage = null;
         }

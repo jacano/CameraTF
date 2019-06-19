@@ -15,7 +15,6 @@
     <AssemblyName>CameraTF</AssemblyName>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <TargetFrameworkVersion>v9.0</TargetFrameworkVersion>
-    <AndroidUseLatestPlatformSdk>False</AndroidUseLatestPlatformSdk>
     <AndroidSupportedAbis>armeabi-v7a;x86;arm64-v8a;x86_64</AndroidSupportedAbis>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <EmbedAssembliesIntoApk>false</EmbedAssembliesIntoApk>
@@ -54,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AR\DetectionMessage.cs" />
+    <Compile Include="AR\StatsMessage.cs" />
     <Compile Include="AR\TensorflowLiteService.cs" />
     <Compile Include="CameraAccess\CameraAnalyzer.cs" />
     <Compile Include="CameraAccess\CameraController.cs" />

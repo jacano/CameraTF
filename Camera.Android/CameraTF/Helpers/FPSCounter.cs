@@ -5,11 +5,11 @@ namespace CameraTF.Helpers
 {
     public class FPSCounter
     {
-        private Action<string> callback;
+        private Action<(float fps, float ms)> callback;
         private Stopwatch fpsTimer;
         private int fpsCounter;
 
-        public FPSCounter(Action<string> callback = null)
+        public FPSCounter(Action<(float fps, float ms)> callback = null)
         {
             this.callback = callback;
 
@@ -24,9 +24,7 @@ namespace CameraTF.Helpers
                 var fps = 1000.0f * this.fpsCounter / this.fpsTimer.ElapsedMilliseconds;
                 var ms = (float)this.fpsTimer.ElapsedMilliseconds / this.fpsCounter;
 
-                var fpsString = $"{fps} fps ({ms} ms)";
-
-                callback?.Invoke(fpsString);
+                callback?.Invoke((fps, ms));
 
                 this.fpsTimer.Restart();
                 this.fpsCounter = 0;

@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 using Android.App;
 using Android.Views;
 using ApxLabs.FastAndroidCamera;
+using CameraTF.AR;
 using CameraTF.Helpers;
+using PubSub.Extension;
 using SkiaSharp;
 
 namespace CameraTF.CameraAccess
@@ -44,8 +46,12 @@ namespace CameraTF.CameraAccess
             inputScaled = new SKBitmap(outputInfo);
             inputScaledRotated = new SKBitmap(outputInfo);
 
-            cameraFPSCounter = new FPSCounter((x) => Debug.WriteLine($"Camera: {x}"));
-            processingFPSCounter = new FPSCounter((x) => Debug.WriteLine($"Processing: {x}"));
+            cameraFPSCounter = new FPSCounter((x) => Debug.WriteLine($"Camera: {x.fps} fps ({x.ms} ms)"));
+            processingFPSCounter = new FPSCounter((x) => this.Publish(new StatsMessage()
+            {
+                Fps = x.fps,
+                Ms = x.ms,
+            }));
         }
 
         public void SetupCamera()
@@ -77,7 +83,7 @@ namespace CameraTF.CameraAccess
 
         private void HandleOnPreviewFrameReady(object sender, FastJavaByteArray fastArray)
         {
-            // cameraFPSCounter.Report();
+            cameraFPSCounter.Report();
 
             if (!CanAnalyzeFrame)
                 return;

@@ -49,7 +49,7 @@ namespace CameraTF.Helpers
                 statsPaint);
         }
 
-        public static void DrawStats(
+        public static void DrawText(
            SKCanvas canvas,
            float x,
            float y,
