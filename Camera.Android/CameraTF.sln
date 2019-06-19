@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26228.9
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29006.145
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CameraTF", "CameraTF\CameraTF.csproj", "{660D9346-D70B-4C54-8402-E5F6DF48E9AC}"
 EndProject
@@ -18,6 +18,7 @@ Global
 		{660D9346-D70B-4C54-8402-E5F6DF48E9AC}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
 		{660D9346-D70B-4C54-8402-E5F6DF48E9AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{660D9346-D70B-4C54-8402-E5F6DF48E9AC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{660D9346-D70B-4C54-8402-E5F6DF48E9AC}.Release|Any CPU.Deploy.0 = Release|Any CPU
 		{D7707A6B-D4DB-4979-B04C-AA1C179CEBE9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D7707A6B-D4DB-4979-B04C-AA1C179CEBE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D7707A6B-D4DB-4979-B04C-AA1C179CEBE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
