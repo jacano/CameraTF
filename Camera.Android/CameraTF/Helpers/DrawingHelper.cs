@@ -27,42 +27,19 @@ namespace CameraTF.Helpers
             Style = SKPaintStyle.Fill,
         };
 
-        public static void DrawBoundingBox(
-            SKCanvas canvas,
-            float left,
-            float top,
-            float right,
-            float bottom)
+        public static void DrawBoundingBox(SKCanvas canvas, float left, float top, float right, float bottom)
         {
             canvas.DrawRoundRect(new SKRect(left, top, right, bottom), new SKSize(23, 23), boundingBoxPaint);
         }
 
-        public static void DrawText(
-           SKCanvas canvas,
-           float x,
-           float y,
-           string text)
+        public static void DrawText(SKCanvas canvas, float x, float y, string text)
         {
-            canvas.DrawText(
-                text,
-                x,
-                y,
-                textPaint);
+            canvas.DrawText(text, x, y, textPaint);
         }
 
-        public static void DrawBackgroundRectangle(
-           SKCanvas canvas,
-           float width,
-           float height,
-           float x,
-           float y)
+        public static void DrawBackgroundRectangle(SKCanvas canvas, float width, float height, float x, float y)
         {
-            canvas.DrawRect(
-                x,
-                y,
-                width,
-                height,
-                backgroundPaint);
+            canvas.DrawRect(x,  y, width, height, backgroundPaint);
         }
     }
 }

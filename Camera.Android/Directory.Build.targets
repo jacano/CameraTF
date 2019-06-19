@@ -11,7 +11,7 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
 		
-		<PackageReference Include="Lindhart.Analyser.MissingAwaitWarning" Version="1.0.1">
+		<PackageReference Include="Lindhart.Analyser.MissingAwaitWarning" Version="1.2.0">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
