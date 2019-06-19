@@ -118,7 +118,7 @@ namespace CameraTF
                 canvas,
                 5,
                 canvasHeight - 3,
-                d.InferenceElapsedMs);
+                $"TF Model eval: {d.InferenceElapsedMs} ms");
 
             lastDetectionMessage = null;
         }

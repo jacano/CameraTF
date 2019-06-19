@@ -72,7 +72,7 @@ namespace CameraTF.CameraAccess
 
         private void HandleOnPreviewFrameReady(object sender, FastJavaByteArray fastArray)
         {
-            cameraFPSCounter.Report();
+            // cameraFPSCounter.Report();
 
             if (!CanAnalyzeFrame)
                 return;

@@ -53,10 +53,10 @@ namespace CameraTF.Helpers
            SKCanvas canvas,
            float x,
            float y,
-           long elapsed)
+           string text)
         {
             canvas.DrawText(
-                $"{elapsed} ms",
+                text,
                 x,
                 y,
                 statsPaint);
