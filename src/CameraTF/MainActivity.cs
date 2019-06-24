@@ -93,13 +93,13 @@ namespace CameraTF
                 canvas,
                 leftMargin,
                 canvasHeight - 0 - bottomMargin,
-                $"Camera FPS: {Stats.CameraFps} fps ({Stats.CameraMs} ms)");
+                $"Camera: {Stats.CameraFps} fps ({Stats.CameraMs} ms)");
 
             DrawingHelper.DrawText(
                 canvas,
                 leftMargin,
                 canvasHeight - 50 - bottomMargin,
-                $"Processing FPS: {Stats.ProcessingFps} fps ({Stats.ProcessingMs} ms)");
+                $"Processing: {Stats.ProcessingFps} fps ({Stats.ProcessingMs} ms)");
 
             DrawingHelper.DrawText(
                 canvas,
@@ -117,7 +117,7 @@ namespace CameraTF
                 canvas,
                 leftMargin,
                 canvasHeight - 200 - bottomMargin,
-                $"TF interpreter invoke: {Stats.InterpreterElapsedMs} ms");
+                $"TFRecognize: {Stats.InterpreterElapsedMs} ms");
 
             for (var i = 0; i < Stats.NumDetections; i++)
             {
