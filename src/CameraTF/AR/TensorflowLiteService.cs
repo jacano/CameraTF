@@ -9,7 +9,6 @@ namespace CameraTF
     {
         public const int ModelInputSize = 300;
 
-        private byte[] quantizedColors;
         private FlatBufferModel model;
         private Interpreter interpreter;
 
@@ -24,8 +23,6 @@ namespace CameraTF
 
                 model = new FlatBufferModel(ms.ToArray());
             }
-
-            quantizedColors = new byte[ModelInputSize * ModelInputSize * 3];
 
             if (!model.CheckModelIdentifier())
             {
@@ -61,9 +58,9 @@ namespace CameraTF
             return true;
         }
 
-        public void Recognize(int* colors, int colorsCount)
+        public void Recognize(IntPtr colors, int colorsCount)
         {
-            CopyColorsToTensor(inputTensor.DataPointer, colors, colorsCount);
+            CopyColorsToTensor(colors, colorsCount, inputTensor.DataPointer);
 
             interpreter.Invoke();
 
@@ -80,23 +77,24 @@ namespace CameraTF
             Stats.BoundingBoxes = detectionBoxes;
         }
 
-        private void CopyColorsToTensor(IntPtr dest, int* colors, int colorsCount)
+        private void CopyColorsToTensor(IntPtr colors, int colorsCount, IntPtr dest)
         {
+            var colorsPtr = (int*)colors;
+            var destPtr = (byte*)dest;
+
             for (var i = 0; i < colorsCount; ++i)
             {
-                var val = colors[i];
+                var val = colorsPtr[i];
 
                 //// AA RR GG BB
                 var r = (byte)((val >> 16) & 0xFF);
                 var g = (byte)((val >> 8) & 0xFF);
                 var b = (byte)(val & 0xFF);
 
-                quantizedColors[(i * 3) + 0] = r;
-                quantizedColors[(i * 3) + 1] = g;
-                quantizedColors[(i * 3) + 2] = b;
+                *(destPtr + (i * 3) + 0) = r;
+                *(destPtr + (i * 3) + 1) = g;
+                *(destPtr + (i * 3) + 2) = b;
             }
-
-            System.Runtime.InteropServices.Marshal.Copy(quantizedColors, 0, dest, quantizedColors.Length);
         }
     }
 }

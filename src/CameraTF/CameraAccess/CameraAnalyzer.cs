@@ -151,7 +151,7 @@ namespace CameraTF.CameraAccess
             Stats.ResizeAndRotateElapsedMs = stopwatch.ElapsedMilliseconds;
 
             stopwatch.Restart();
-            tfService.Recognize((int*)colors, colorCount);
+            tfService.Recognize(colors, colorCount);
             stopwatch.Stop();
             Stats.InterpreterElapsedMs = stopwatch.ElapsedMilliseconds;
 
