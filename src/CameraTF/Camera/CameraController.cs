@@ -139,12 +139,6 @@ namespace CameraTF.CameraAccess
 
                     var whichCamera = CameraFacing.Back;
 
-					//if (_scannerHost.ScanningOptions.UseFrontCameraIfAvailable.HasValue &&
-     //                   _scannerHost.ScanningOptions.UseFrontCameraIfAvailable.Value)
-     //                   whichCamera = CameraFacing.Front;
-
-                    //TODO
-
                     for (var i = 0; i < numCameras; i++)
                     {
                         Camera.GetCameraInfo(i, camInfo);

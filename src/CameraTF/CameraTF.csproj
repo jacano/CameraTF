@@ -52,9 +52,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AR\TensorflowLiteService.cs" />
-    <Compile Include="CameraAccess\CameraAnalyzer.cs" />
-    <Compile Include="CameraAccess\CameraController.cs" />
-    <Compile Include="CameraAccess\CameraEventsListener.cs" />
+    <Compile Include="Camera\CameraAnalyzer.cs" />
+    <Compile Include="Camera\CameraController.cs" />
+    <Compile Include="Camera\CameraEventsListener.cs" />
     <Compile Include="Helpers\DrawingHelper.cs" />
     <Compile Include="Helpers\FPSCounter.cs" />
     <Compile Include="Helpers\MathHelper.cs" />

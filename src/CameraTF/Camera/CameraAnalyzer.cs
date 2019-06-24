@@ -177,17 +177,5 @@ namespace CameraTF.CameraAccess
                 tfService.Initialize(modelData, useNumThreads: true);
             }
         }
-
-        private void SaveSkiaImg(SKBitmap img)
-        {
-            var path = Android.OS.Environment.ExternalStorageDirectory.AbsolutePath;
-            var filePath = Path.Combine(path, "test_skia.png");
-
-            using (var stream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
-            {
-                var d = SKImage.FromBitmap(img).Encode(SKEncodedImageFormat.Png, 100);
-                d.SaveTo(stream);
-            }
-        }
     }
 }
