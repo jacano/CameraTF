@@ -5,15 +5,15 @@ namespace CameraTF.Helpers
 {
     public class FPSCounter
     {
-        private Action<(float fps, float ms)> callback;
-        private Stopwatch fpsTimer;
+        private readonly Action<(float fps, float ms)> callback;
+        private readonly Stopwatch fpsTimer;
+
         private int fpsCounter;
 
         public FPSCounter(Action<(float fps, float ms)> callback = null)
         {
             this.callback = callback;
-
-            fpsTimer = Stopwatch.StartNew();
+            this.fpsTimer = Stopwatch.StartNew();
         }
 
         public void Report()

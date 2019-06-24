@@ -217,44 +217,24 @@ namespace CameraTF.CameraAccess
                 parameters.SetPreviewFpsRange(selectedFps[0], selectedFps[1]);
             }
 
-            CameraResolution resolution = null;
             var supportedPreviewSizes = parameters.SupportedPreviewSizes;
             if (supportedPreviewSizes != null)
             {
-                var availableResolutions = supportedPreviewSizes.Select(sps => new CameraResolution
+                foreach (var sps in supportedPreviewSizes)
                 {
-                    Width = sps.Width,
-                    Height = sps.Height
-                });
-
-                // If the user did not specify a resolution, let's try and find a suitable one
-                if (resolution == null)
-                {
-                    foreach (var sps in supportedPreviewSizes)
+                    if (sps.Width >= 640 && sps.Width <= 1000 && sps.Height >= 360 && sps.Height <= 1000)
                     {
-                        if (sps.Width >= 640 && sps.Width <= 1000 && sps.Height >= 360 && sps.Height <= 1000)
-                        {
-                            resolution = new CameraResolution
-                            {
-                                Width = sps.Width,
-                                Height = sps.Height
-                            };
-                            break;
-                        }
+                        LastCameraDisplayWidth = sps.Width;
+                        LastCameraDisplayHeight = sps.Height;
+
+                        break;
                     }
                 }
             }
 
-            // Hopefully a resolution was selected at some point
-            if (resolution != null)
-            {
-                System.Diagnostics.Debug.WriteLine(
-                    "Selected Resolution: " + resolution.Width + "x" + resolution.Height);
-                parameters.SetPreviewSize(resolution.Width, resolution.Height);
-
-                LastCameraDisplayWidth = parameters.PreviewSize.Width;
-                LastCameraDisplayHeight = parameters.PreviewSize.Height;
-            }
+            System.Diagnostics.Debug.WriteLine(
+                "Selected Resolution: " + LastCameraDisplayWidth + "x" + LastCameraDisplayHeight);
+            parameters.SetPreviewSize(LastCameraDisplayWidth, LastCameraDisplayHeight);
 
             camera.SetParameters(parameters);
 

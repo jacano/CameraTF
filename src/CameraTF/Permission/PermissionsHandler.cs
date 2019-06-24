@@ -12,6 +12,12 @@ namespace CameraTF
 {
     public static class PermissionsHandler
     {
+        public static readonly string[] RequiredPermissions = new[] {
+            Android.Manifest.Permission.Camera,
+            Android.Manifest.Permission.Flashlight,
+            Android.Manifest.Permission.WriteExternalStorage
+        };
+
         static TaskCompletionSource<bool> requestCompletion = null;
 
         public static Task PermissionRequestTask
@@ -27,7 +33,7 @@ namespace CameraTF
             var permissionsToRequest = new List<string>();
 
             // Check and request any permissions
-            foreach (var permission in MainActivity.RequiredPermissions)
+            foreach (var permission in RequiredPermissions)
             {
                 if (IsPermissionInManifest(context, permission))
                 {
@@ -47,7 +53,7 @@ namespace CameraTF
             var permissionsToRequest = new List<string>();
 
             // Check and request any permissions
-            foreach (var permission in MainActivity.RequiredPermissions)
+            foreach (var permission in RequiredPermissions)
             {
                 if (IsPermissionInManifest(activity, permission))
                 {

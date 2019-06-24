@@ -1,8 +1,6 @@
-﻿using CameraTF.AR;
+﻿using CameraTF.Helpers;
 using Emgu.TF.Lite;
-using PubSub.Extension;
 using System;
-using System.Diagnostics;
 using System.IO;
 
 namespace CameraTF
@@ -13,7 +11,6 @@ namespace CameraTF
 
         private byte[] quantizedColors;
         private FlatBufferModel model;
-
         private Interpreter interpreter;
 
         private Tensor inputTensor;
@@ -64,35 +61,23 @@ namespace CameraTF
             return true;
         }
 
-        public bool Recognize(int* colors, int colorsCount)
+        public void Recognize(int* colors, int colorsCount)
         {
             CopyColorsToTensor(inputTensor.DataPointer, colors, colorsCount);
 
-            var stopwatch = new Stopwatch();
-
-            stopwatch.Start();
             interpreter.Invoke();
-            stopwatch.Stop();
 
-            var detection_boxes_out = (float[])outputTensors[0].GetData();
-            var detection_classes_out = (float[])outputTensors[1].GetData();
-            var detection_scores_out = (float[])outputTensors[2].GetData();
-            var num_detections_out = (float[])outputTensors[3].GetData();
+            var detectionBoxes = (float[])outputTensors[0].GetData();
+            var detectionClasses = (float[])outputTensors[1].GetData();
+            var detectionScores = (float[])outputTensors[2].GetData();
+            var detectionNumDetections = (float[])outputTensors[3].GetData();
 
-            var numDetections = (int)num_detections_out[0];
+            var numDetections = (int)detectionNumDetections[0];
 
-            var detectionMessage = new DetectionMessage()
-            {
-                InterpreterElapsedMs = stopwatch.ElapsedMilliseconds,
-                NumDetections = numDetections,
-                Labels = detection_classes_out,
-                Scores = detection_scores_out,
-                BoundingBoxes = detection_boxes_out,
-            };
-
-            this.Publish(detectionMessage);
-
-            return true;
+            Stats.NumDetections = numDetections;
+            Stats.Labels = detectionClasses;
+            Stats.Scores = detectionScores;
+            Stats.BoundingBoxes = detectionBoxes;
         }
 
         private void CopyColorsToTensor(IntPtr dest, int* colors, int colorsCount)

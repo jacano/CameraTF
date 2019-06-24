@@ -6,8 +6,6 @@ using Android.Runtime;
 using Android.Widget;
 using Android.Support.V7.App;
 using SkiaSharp.Views.Android;
-using CameraTF.AR;
-using PubSub.Extension;
 using CameraTF.Helpers;
 using System.IO;
 using System;
@@ -21,21 +19,13 @@ namespace CameraTF
         ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.KeyboardHidden | ConfigChanges.ScreenLayout)]
     public class MainActivity : AppCompatActivity
     {
-        public static readonly string[] RequiredPermissions = new[] {
-            Android.Manifest.Permission.Camera,
-            Android.Manifest.Permission.Flashlight,
-            Android.Manifest.Permission.WriteExternalStorage
-        };
-
         private const float MinScore = 0.6f;
         private const int LabelOffset = 1;
         private const string LabelsFilename = "hardhat_labels_list.txt";
 
         private string[] labels;
 
-        private DetectionMessage lastDetectionMessage;
-        private StatsMessage lastCameraStatsMessage;
-        private ProcessingStatsMessage lastProcessingStatsMessage;
+        private static SKCanvasView canvasView;
 
         protected override void OnCreate (Bundle bundle)
         {
@@ -51,21 +41,17 @@ namespace CameraTF
             LoadModelLabels();
 
             var cameraSurface = new CameraSurfaceView(this);
-            var canvasView = new SKCanvasView(this);
+            canvasView = new SKCanvasView(this);
             canvasView.PaintSurface += Canvas_PaintSurface;
-
-            this.Subscribe<CameraStatsMessage>((d) => lastCameraStatsMessage = d);
-            this.Subscribe<ProcessingStatsMessage>((d) => lastProcessingStatsMessage = d);
-            this.Subscribe<DetectionMessage>((d) =>
-            {
-                lastDetectionMessage = d;
-
-                canvasView.Invalidate();
-            });
 
             var mainView = this.FindViewById<FrameLayout>(Resource.Id.frameLayout1);
             mainView.AddView(cameraSurface);
             mainView.AddView(canvasView);
+        }
+
+        public static void ReloadCanvas()
+        {
+            canvasView.Invalidate();
         }
 
         private void LoadModelLabels()
@@ -90,14 +76,12 @@ namespace CameraTF
             var canvasWidth = e.Info.Width;
             var canvasHeight = e.Info.Height;
 
-            var detection = lastDetectionMessage;
-            if (detection == null) return;
-
             canvas.Clear();
 
             var leftMargin = 5;
+            var bottomMargin = 5;
 
-            var recHeight = 150;
+            var recHeight = 250;
             DrawingHelper.DrawBackgroundRectangle(
                 canvas,
                 canvasWidth,
@@ -106,36 +90,43 @@ namespace CameraTF
                 canvasHeight - recHeight);
 
             DrawingHelper.DrawText(
-               canvas,
-               leftMargin,
-               canvasHeight - 105,
-               $"TF interpreter invoke: {detection.InterpreterElapsedMs} ms");
+                canvas,
+                leftMargin,
+                canvasHeight - 0 - bottomMargin,
+                $"Camera FPS: {Stats.CameraFps} fps ({Stats.CameraMs} ms)");
 
-            var cameraStats = lastCameraStatsMessage;
-            var processingStats = lastProcessingStatsMessage;
-            if (cameraStats != null && processingStats != null)
+            DrawingHelper.DrawText(
+                canvas,
+                leftMargin,
+                canvasHeight - 50 - bottomMargin,
+                $"Processing FPS: {Stats.ProcessingFps} fps ({Stats.ProcessingMs} ms)");
+
+            DrawingHelper.DrawText(
+                canvas,
+                leftMargin,
+                canvasHeight - 100 - bottomMargin,
+                $"YUV2RGB: {Stats.YUV2RGBElapsedMs} ms");
+
+            DrawingHelper.DrawText(
+                canvas,
+                leftMargin,
+                canvasHeight - 150 - bottomMargin,
+                $"ResizeAndRotate: {Stats.ResizeAndRotateElapsedMs} ms");
+
+            DrawingHelper.DrawText(
+                canvas,
+                leftMargin,
+                canvasHeight - 200 - bottomMargin,
+                $"TF interpreter invoke: {Stats.InterpreterElapsedMs} ms");
+
+            for (var i = 0; i < Stats.NumDetections; i++)
             {
-                DrawingHelper.DrawText(
-                    canvas,
-                    leftMargin,
-                    canvasHeight - 55,
-                    $"Processing FPS: {processingStats.Fps} fps ({processingStats.Ms} ms)");
-
-                DrawingHelper.DrawText(
-                    canvas,
-                    leftMargin,
-                    canvasHeight - 5,
-                    $"Camera FPS: {cameraStats.Fps} fps ({cameraStats.Ms} ms)");
-            }
-
-            for (var i = 0; i < detection.NumDetections; i++)
-            {
-                var score = detection.Scores[i];
-                var labelIndex = (int)detection.Labels[i];
-                var xmin = detection.BoundingBoxes[i * 4 + 0];
-                var ymin = detection.BoundingBoxes[i * 4 + 1];
-                var xmax = detection.BoundingBoxes[i * 4 + 2];
-                var ymax = detection.BoundingBoxes[i * 4 + 3];
+                var score = Stats.Scores[i];
+                var labelIndex = (int)Stats.Labels[i];
+                var xmin = Stats.BoundingBoxes[i * 4 + 0];
+                var ymin = Stats.BoundingBoxes[i * 4 + 1];
+                var xmax = Stats.BoundingBoxes[i * 4 + 2];
+                var ymax = Stats.BoundingBoxes[i * 4 + 3];
 
                 if (!labelIndex.Between(0, labels.Length - 1)) continue;
                 if (score < MinScore) continue;
@@ -155,8 +146,6 @@ namespace CameraTF
                 var label = labels[labelIndex + LabelOffset];
                 DrawingHelper.DrawText(canvas, left, bottom, $"{label} - {score}");
             }
-
-            lastDetectionMessage = null;
         }
 
         protected async override void OnResume ()

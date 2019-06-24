@@ -6,9 +6,7 @@ using System.Threading.Tasks;
 using Android.App;
 using Android.Views;
 using ApxLabs.FastAndroidCamera;
-using CameraTF.AR;
 using CameraTF.Helpers;
-using PubSub.Extension;
 using SkiaSharp;
 
 namespace CameraTF.CameraAccess
@@ -26,6 +24,8 @@ namespace CameraTF.CameraAccess
         private int cDegrees;
 
         private SKBitmap input;
+        private IntPtr colors;
+        private int colorCount;
         private SKBitmap inputScaled;
         private SKBitmap inputScaledRotated;
         private int[] imageData;
@@ -34,8 +34,10 @@ namespace CameraTF.CameraAccess
 
         private TensorflowLiteService tfService;
 
-        private FPSCounter cameraFPSCounter;
-        private FPSCounter processingFPSCounter;
+        private readonly FPSCounter cameraFPSCounter;
+        private readonly FPSCounter processingFPSCounter;
+
+        private readonly Stopwatch stopwatch;
 
         public CameraAnalyzer(SurfaceView surfaceView)
         {
@@ -51,17 +53,20 @@ namespace CameraTF.CameraAccess
             inputScaled = new SKBitmap(outputInfo);
             inputScaledRotated = new SKBitmap(outputInfo);
 
-            cameraFPSCounter = new FPSCounter((x) => this.Publish(new CameraStatsMessage()
-            {
-                Fps = x.fps,
-                Ms = x.ms,
-            }));
+            colors = inputScaledRotated.GetPixels();
+            colorCount = TensorflowLiteService.ModelInputSize * TensorflowLiteService.ModelInputSize;
 
-            processingFPSCounter = new FPSCounter((x) => this.Publish(new ProcessingStatsMessage()
-            {
-                Fps = x.fps,
-                Ms = x.ms,
-            }));
+            stopwatch = new Stopwatch();
+
+            cameraFPSCounter = new FPSCounter((x) => {
+                Stats.CameraFps = x.fps;
+                Stats.CameraMs = x.ms;
+            });
+
+            processingFPSCounter = new FPSCounter((x) => {
+                Stats.ProcessingFps = x.fps;
+                Stats.ProcessingMs = x.ms;
+            });
         }
 
         public void SetupCamera()
@@ -98,10 +103,10 @@ namespace CameraTF.CameraAccess
             if (!CanAnalyzeFrame)
                 return;
 
-			processingTask = Task.Run(() =>
-			{
-                processingFPSCounter.Report();
+            processingFPSCounter.Report();
 
+            processingTask = Task.Run(() =>
+			{
                 try
 				{
 					DecodeFrame(fastArray);
@@ -128,22 +133,29 @@ namespace CameraTF.CameraAccess
                 imageIntPtr = imageGCHandle.AddrOfPinnedObject();
 
                 input = new SKBitmap(new SKImageInfo(width, height, SKColorType.Rgba8888));
+                input.InstallPixels(input.Info, imageIntPtr);
             }
 
             var pY = fastArray.Raw;
             var pUV = pY + width * height;
+
+            stopwatch.Restart();
             YuvHelper.ConvertYUV420SPToARGB8888(pY, pUV, (int*)imageIntPtr, width, height);
+            stopwatch.Stop();
+            Stats.YUV2RGBElapsedMs = stopwatch.ElapsedMilliseconds;
 
-            input.InstallPixels(input.Info, imageIntPtr);
-
+            stopwatch.Restart();
             input.ScalePixels(inputScaled, SKFilterQuality.None);
-
             RotateBitmap(inputScaled, cDegrees);
+            stopwatch.Stop();
+            Stats.ResizeAndRotateElapsedMs = stopwatch.ElapsedMilliseconds;
 
-            var colors = inputScaledRotated.GetPixels();
-            var colorCount = TensorflowLiteService.ModelInputSize * TensorflowLiteService.ModelInputSize;
-
+            stopwatch.Restart();
             tfService.Recognize((int*)colors, colorCount);
+            stopwatch.Stop();
+            Stats.InterpreterElapsedMs = stopwatch.ElapsedMilliseconds;
+
+            MainActivity.ReloadCanvas();
         }
 
         private void RotateBitmap(SKBitmap bitmap, int degrees)
