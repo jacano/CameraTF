@@ -51,7 +51,7 @@ namespace CameraTF
 
         public static void ReloadCanvas()
         {
-            canvasView.postInvalidate();
+            canvasView.PostInvalidate();
         }
 
         private void LoadModelLabels()
